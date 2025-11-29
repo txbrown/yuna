@@ -1,24 +1,32 @@
 import {
+  Persona,
+  PersonaChat,
+  PersonaEditor,
+  PersonaList,
+  usePersonas,
+} from '@/features/personas';
+import {
   CactusModel,
   cactusService,
 } from '@/features/personas/services/cactus-service';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 
+type Tab = 'model' | 'personas' | 'chat';
+
 export default function PersonasDebugScreen() {
+  const [activeTab, setActiveTab] = useState<Tab>('model');
   const [selectedModel, setSelectedModel] = useState<CactusModel>('qwen3-0.6');
   const [isDownloading, setIsDownloading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState<number>(0);
   const [modelStatuses, setModelStatuses] = useState<
     Record<CactusModel, { downloaded: boolean; initialized: boolean }>
@@ -28,21 +36,19 @@ export default function PersonasDebugScreen() {
     'qwen3-1.5': { downloaded: false, initialized: false },
   });
 
-  const [userMessage, setUserMessage] = useState('');
-  const [conversation, setConversation] = useState<
-    Array<{
-      role: string;
-      content: string;
-      usage?: {
-        promptTokens: number;
-        completionTokens: number;
-        totalTokens: number;
-      };
-    }>
-  >([]);
-  const [temperature, setTemperature] = useState<string>('0.7');
-  const [maxTokens, setMaxTokens] = useState<string>('512');
-  const [totalTokensUsed, setTotalTokensUsed] = useState(0);
+  // Persona management
+  const {
+    personas,
+    isLoading: isLoadingPersonas,
+    createPersona,
+    updatePersona,
+    deletePersona,
+    resetToDefaults,
+  } = usePersonas();
+  const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
+  const [editingPersona, setEditingPersona] = useState<Persona | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   const availableModels: CactusModel[] = [
     'qwen3-0.6',
@@ -61,6 +67,13 @@ export default function PersonasDebugScreen() {
       }
     }
   }, []);
+
+  // Auto-select first persona if none selected
+  useEffect(() => {
+    if (personas.length > 0 && !selectedPersona) {
+      setSelectedPersona(personas[0]);
+    }
+  }, [personas, selectedPersona]);
 
   const checkModelStatuses = async () => {
     const statuses: Record<
@@ -116,7 +129,7 @@ export default function PersonasDebugScreen() {
   };
 
   const handleSwitchModel = async () => {
-    if (isDownloading || isGenerating) {
+    if (isDownloading) {
       return;
     }
 
@@ -153,8 +166,6 @@ export default function PersonasDebugScreen() {
           onPress: () => {
             cactusService.reset();
             setIsInitialized(false);
-            setConversation([]);
-            setTotalTokensUsed(0);
             checkModelStatuses();
             Alert.alert('Success', 'Service reset successfully.');
           },
@@ -163,72 +174,92 @@ export default function PersonasDebugScreen() {
     );
   };
 
-  const handleSendMessage = async () => {
-    if (!userMessage.trim()) {
-      Alert.alert('Error', 'Please enter a message');
-      return;
-    }
+  // Persona handlers
+  const handleCreatePersona = () => {
+    setIsCreating(true);
+    setEditingPersona(null);
+    setShowEditor(true);
+  };
 
-    if (!isInitialized) {
-      Alert.alert('Error', 'Please download a model first');
-      return;
-    }
+  const handleEditPersona = (persona: Persona) => {
+    setIsCreating(false);
+    setEditingPersona(persona);
+    setShowEditor(true);
+  };
 
-    const newMessage = { role: 'user', content: userMessage };
-    const updatedConversation = [...conversation, newMessage];
-    setConversation(updatedConversation);
-    setUserMessage('');
+  const handleDeletePersona = (persona: Persona) => {
+    Alert.alert(
+      'Delete Persona',
+      `Are you sure you want to delete "${persona.name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deletePersona(persona.id);
+            if (selectedPersona?.id === persona.id) {
+              const remaining = personas.filter((p) => p.id !== persona.id);
+              setSelectedPersona(remaining[0] || null);
+            }
+          },
+        },
+      ]
+    );
+  };
 
+  const handleSavePersona = (
+    data: Omit<Persona, 'id' | 'createdAt' | 'updatedAt'>
+  ) => {
     try {
-      setIsGenerating(true);
-
-      const tempValue = parseFloat(temperature);
-      const maxTokensValue = parseInt(maxTokens, 10);
-
-      const result = await cactusService.complete({
-        messages: updatedConversation.map((msg) => ({
-          role: msg.role as 'user' | 'assistant' | 'system',
-          content: msg.content,
-        })),
-        temperature: isNaN(tempValue) ? undefined : tempValue,
-        maxTokens: isNaN(maxTokensValue) ? undefined : maxTokensValue,
-      });
-
-      const assistantMessage = {
-        role: 'assistant' as const,
-        content: result.response,
-        usage: result.usage,
-      };
-
-      setConversation([...updatedConversation, assistantMessage]);
-
-      if (result.usage) {
-        setTotalTokensUsed((prev) => prev + result.usage!.totalTokens);
+      if (isCreating) {
+        const newPersona = createPersona(data);
+        setSelectedPersona(newPersona);
+      } else if (editingPersona) {
+        updatePersona(editingPersona.id, data);
       }
+      setShowEditor(false);
+      setEditingPersona(null);
+      setIsCreating(false);
     } catch (error) {
       Alert.alert(
         'Error',
-        `Failed to generate response: ${(error as Error).message}`
+        `Failed to save persona: ${(error as Error).message}`
       );
-    } finally {
-      setIsGenerating(false);
     }
   };
 
-  const handleClearConversation = () => {
-    setConversation([]);
+  const handleResetPersonas = () => {
+    Alert.alert(
+      'Reset Personas',
+      'This will reset all personas to defaults. Custom personas will be lost.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: () => {
+            resetToDefaults();
+            const defaults = personas.filter((p) =>
+              ['12 Year Old Kid', 'Engineer', 'Scientist'].includes(p.name)
+            );
+            setSelectedPersona(defaults[0] || null);
+          },
+        },
+      ]
+    );
   };
 
-  return (
+  const renderModelSetup = () => (
     <ScrollView style={styles.container}>
       <View style={styles.section}>
-        <Text style={styles.header}>Personas Debug Screen</Text>
-        <Text style={styles.subheader}>Test Cactus AI Integration</Text>
+        <Text style={styles.header}>Model Setup</Text>
+        <Text style={styles.subheader}>Configure Cactus AI Model</Text>
       </View>
 
       {/* Model Selection */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>1. Select Model</Text>
+        <Text style={styles.sectionTitle}>Select Model</Text>
         <View style={styles.modelGrid}>
           {availableModels.map((model) => {
             const status = modelStatuses[model];
@@ -246,7 +277,7 @@ export default function PersonasDebugScreen() {
                   isCurrent && styles.modelButtonCurrent,
                 ]}
                 onPress={() => setSelectedModel(model)}
-                disabled={isDownloading || isGenerating}
+                disabled={isDownloading}
               >
                 <Text
                   style={[
@@ -285,7 +316,7 @@ export default function PersonasDebugScreen() {
           <TouchableOpacity
             style={[styles.button, styles.downloadButton, { flex: 1 }]}
             onPress={handleDownloadModel}
-            disabled={isDownloading || isGenerating}
+            disabled={isDownloading}
           >
             <Text style={styles.buttonText}>
               {isDownloading
@@ -301,7 +332,7 @@ export default function PersonasDebugScreen() {
             <TouchableOpacity
               style={[styles.button, styles.switchButton, { flex: 1 }]}
               onPress={handleSwitchModel}
-              disabled={isDownloading || isGenerating}
+              disabled={isDownloading}
             >
               <Text style={styles.buttonText}>Switch</Text>
             </TouchableOpacity>
@@ -315,160 +346,237 @@ export default function PersonasDebugScreen() {
         <TouchableOpacity
           style={[styles.button, styles.resetButton]}
           onPress={handleReset}
-          disabled={isDownloading || isGenerating}
+          disabled={isDownloading}
         >
           <Text style={styles.buttonText}>Reset Service</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Generation Settings */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>2. Generation Settings</Text>
-
-        <View style={styles.settingsRow}>
-          <View style={styles.settingItem}>
-            <Text style={styles.settingLabel}>Temperature: {temperature}</Text>
-            <TextInput
-              style={styles.settingInput}
-              value={temperature}
-              onChangeText={setTemperature}
-              keyboardType='decimal-pad'
-              placeholder='0.7'
-              editable={!isGenerating}
-            />
-            <Text style={styles.settingHint}>
-              0.0 (deterministic) - 2.0 (creative)
-            </Text>
-          </View>
-
-          <View style={styles.settingItem}>
-            <Text style={styles.settingLabel}>Max Tokens: {maxTokens}</Text>
-            <TextInput
-              style={styles.settingInput}
-              value={maxTokens}
-              onChangeText={setMaxTokens}
-              keyboardType='number-pad'
-              placeholder='512'
-              editable={!isGenerating}
-            />
-            <Text style={styles.settingHint}>Maximum response length</Text>
-          </View>
-        </View>
-
-        {totalTokensUsed > 0 && (
-          <View style={styles.statsContainer}>
-            <Text style={styles.statsText}>
-              Total Tokens Used: {totalTokensUsed.toLocaleString()}
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {/* Chat Interface */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>3. Chat with AI</Text>
-
-        {!isInitialized && (
-          <Text style={styles.warningText}>
-            Please download a model first to start chatting
-          </Text>
-        )}
-
-        {/* Conversation History */}
-        {conversation.length > 0 && (
-          <View style={styles.conversationContainer}>
-            {conversation.map((msg, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.messageCard,
-                  msg.role === 'user'
-                    ? styles.userMessage
-                    : styles.assistantMessage,
-                ]}
-              >
-                <View style={styles.messageHeader}>
-                  <Text style={styles.messageRole}>
-                    {msg.role === 'user' ? '👤 You' : '🤖 AI'}
-                  </Text>
-                  {msg.usage && (
-                    <Text style={styles.messageUsage}>
-                      {msg.usage.totalTokens} tokens
-                    </Text>
-                  )}
-                </View>
-                <Text style={styles.messageContent}>{msg.content}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Input */}
-        <TextInput
-          style={styles.input}
-          placeholder='Type your message...'
-          value={userMessage}
-          onChangeText={setUserMessage}
-          multiline
-          numberOfLines={3}
-          editable={!isGenerating}
-        />
-
-        <View style={styles.buttonRow}>
-          <TouchableOpacity
-            style={[styles.button, styles.sendButton, { flex: 2 }]}
-            onPress={handleSendMessage}
-            disabled={!isInitialized || isGenerating}
-          >
-            {isGenerating ? (
-              <ActivityIndicator color='#fff' />
-            ) : (
-              <Text style={styles.buttonText}>Send Message</Text>
-            )}
-          </TouchableOpacity>
-
-          {conversation.length > 0 && (
-            <TouchableOpacity
-              style={[styles.button, styles.clearButton, { flex: 1 }]}
-              onPress={handleClearConversation}
-              disabled={isGenerating}
-            >
-              <Text style={styles.buttonText}>Clear</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Info */}
-      <View style={styles.section}>
-        <Text style={styles.infoTitle}>Tips:</Text>
-        <Text style={styles.infoText}>
-          • First time: Download the model (may take a few minutes)
-        </Text>
-        <Text style={styles.infoText}>
-          • qwen3-0.6 is the smallest/fastest model (~600MB)
-        </Text>
-        <Text style={styles.infoText}>
-          • Chat history is maintained for context
-        </Text>
-        <Text style={styles.infoText}>
-          • AI runs completely on-device (offline)
-        </Text>
-        <Text style={styles.infoText}>
-          • Lower temperature = more focused, Higher = more creative
-        </Text>
-        <Text style={styles.infoText}>
-          • Adjust max tokens to control response length
-        </Text>
-      </View>
     </ScrollView>
+  );
+
+  const renderPersonas = () => (
+    <View style={styles.container}>
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <View>
+            <Text style={styles.header}>Personas</Text>
+            <Text style={styles.subheader}>Manage AI personas</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.button, styles.createButton]}
+            onPress={handleCreatePersona}
+          >
+            <Text style={styles.buttonText}>+ New</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <PersonaList
+        personas={personas}
+        selectedPersonaId={selectedPersona?.id}
+        isLoading={isLoadingPersonas}
+        onSelectPersona={(persona) => {
+          setSelectedPersona(persona);
+          setActiveTab('chat');
+        }}
+        onEditPersona={handleEditPersona}
+        onDeletePersona={handleDeletePersona}
+      />
+
+      <View style={styles.section}>
+        <TouchableOpacity
+          style={[styles.button, styles.resetButton]}
+          onPress={handleResetPersonas}
+        >
+          <Text style={styles.buttonText}>Reset to Defaults</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Modal
+        visible={showEditor}
+        animationType='slide'
+        presentationStyle='pageSheet'
+        onRequestClose={() => {
+          setShowEditor(false);
+          setEditingPersona(null);
+          setIsCreating(false);
+        }}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>
+              {isCreating ? 'Create Persona' : 'Edit Persona'}
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setShowEditor(false);
+                setEditingPersona(null);
+                setIsCreating(false);
+              }}
+            >
+              <Text style={styles.modalClose}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          <PersonaEditor
+            persona={editingPersona}
+            onSave={handleSavePersona}
+            onCancel={() => {
+              setShowEditor(false);
+              setEditingPersona(null);
+              setIsCreating(false);
+            }}
+            mode={isCreating ? 'create' : 'edit'}
+          />
+        </View>
+      </Modal>
+    </View>
+  );
+
+  const renderChat = () => (
+    <View style={styles.container}>
+      <View style={styles.section}>
+        <Text style={styles.header}>Chat</Text>
+        <Text style={styles.subheader}>
+          {selectedPersona
+            ? `Chatting with ${selectedPersona.name}`
+            : 'Select a persona to start chatting'}
+        </Text>
+      </View>
+
+      {!isInitialized && (
+        <View style={styles.section}>
+          <Text style={styles.warningText}>
+            Please download a model first in the Model Setup tab
+          </Text>
+        </View>
+      )}
+
+      <View style={styles.chatContainer}>
+        <PersonaChat persona={selectedPersona} />
+      </View>
+    </View>
+  );
+
+  return (
+    <View style={styles.mainContainer}>
+      {/* Tab Navigation */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'model' && styles.tabActive]}
+          onPress={() => setActiveTab('model')}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'model' && styles.tabTextActive,
+            ]}
+          >
+            Model
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'personas' && styles.tabActive]}
+          onPress={() => setActiveTab('personas')}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'personas' && styles.tabTextActive,
+            ]}
+          >
+            Personas
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'chat' && styles.tabActive]}
+          onPress={() => setActiveTab('chat')}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'chat' && styles.tabTextActive,
+            ]}
+          >
+            Chat
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Tab Content */}
+      {activeTab === 'model' && renderModelSetup()}
+      {activeTab === 'personas' && renderPersonas()}
+      {activeTab === 'chat' && renderChat()}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabActive: {
+    borderBottomColor: '#2196f3',
+  },
+  tabText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '600',
+  },
+  tabTextActive: {
+    color: '#2196f3',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  chatContainer: {
+    flex: 1,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+  },
+  modalClose: {
+    fontSize: 24,
+    color: '#666',
+    fontWeight: '300',
+  },
+  createButton: {
+    backgroundColor: '#4caf50',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   section: {
     backgroundColor: '#fff',
