@@ -16,6 +16,12 @@ export default function TabOneScreen() {
         </TouchableOpacity>
       </Link>
 
+      <Link href="/debug/personas" asChild>
+        <TouchableOpacity style={[styles.debugButton, styles.personasButton]}>
+          <Text style={styles.debugButtonText}>Open Personas Debug Screen</Text>
+        </TouchableOpacity>
+      </Link>
+
       <EditScreenInfo path="app/(tabs)/index.tsx" />
     </View>
   );
@@ -41,7 +47,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
-    marginBottom: 20,
+    marginBottom: 12,
+  },
+  personasButton: {
+    backgroundColor: '#9c27b0',
   },
   debugButtonText: {
     color: '#fff',
