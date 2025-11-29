@@ -2,10 +2,10 @@ import React, { useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import Animated, {
-    interpolate,
-    useAnimatedStyle,
-    useSharedValue,
-    withTiming,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { EditorContentProps } from '../types';
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: 42,
     fontWeight: '700',
-    fontFamily: 'Orbitron_700Bold',
+    fontFamily: 'SpaceMono-Bold',
     color: '#000',
     textAlign: 'center',
     marginBottom: 16,
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   welcomeSubtitle: {
     fontSize: 16,
     fontWeight: '400',
-    fontFamily: 'Orbitron_400Regular',
+    fontFamily: 'SpaceMono',
     color: '#666',
     textAlign: 'center',
   },
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     fontSize: 16,
-    fontFamily: 'Orbitron_400Regular',
+    fontFamily: 'SpaceMono',
     color: '#000',
   },
   formattedView: {
@@ -236,16 +236,17 @@ const styles = StyleSheet.create({
 const markdownStyles = {
   body: {
     fontSize: 16,
-    fontFamily: 'Orbitron_400Regular',
+    fontFamily: 'SpaceMono',
     color: '#000',
     lineHeight: 24,
   },
   strong: {
     fontWeight: 'bold' as const,
-    fontFamily: 'Orbitron_700Bold',
+    fontFamily: 'SpaceMono-Bold',
   },
   em: {
     fontStyle: 'italic' as const,
+    fontFamily: 'SpaceMono-Italic',
   },
   list_item: {
     marginBottom: 4,

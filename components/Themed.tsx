@@ -36,7 +36,7 @@ export function Text(props: TextProps) {
 
   return (
     <DefaultText
-      style={[{ color, fontFamily: 'Orbitron_400Regular' }, style]}
+      style={[{ color, fontFamily: 'SpaceMono' }, style]}
       {...otherProps}
     />
   );

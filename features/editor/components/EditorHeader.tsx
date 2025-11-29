@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '500',
-    fontFamily: 'Orbitron_500Medium',
+    fontFamily: 'SpaceMono',
     color: '#000',
   },
 });

@@ -35,7 +35,7 @@ export interface EditorToolbarProps {
   onToggleStrikeThrough: () => void;
   onToggleList: () => void;
   isVisible?: boolean;
-  showItalic?: boolean; // Hide italic if font doesn't support it
+  showItalic?: boolean; // Show/hide italic button based on font support
 }
 
 /**

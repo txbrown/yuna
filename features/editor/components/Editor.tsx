@@ -76,7 +76,7 @@ export const Editor: React.FC<EditorProps> = ({
           onToggleStrikeThrough={onToggleStrikeThrough}
           onToggleList={onToggleList}
           isVisible={isInEditorMode}
-          showItalic={false} // Hide italic since Orbitron doesn't support it
+          showItalic={true} // SpaceMono supports italics
         />
       </View>
     </View>

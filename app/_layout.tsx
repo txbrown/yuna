@@ -1,11 +1,3 @@
-import {
-  Orbitron_400Regular,
-  Orbitron_500Medium,
-  Orbitron_600SemiBold,
-  Orbitron_700Bold,
-  Orbitron_800ExtraBold,
-  Orbitron_900Black,
-} from '@expo-google-fonts/orbitron';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import {
   DarkTheme,
@@ -40,12 +32,9 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    Orbitron_400Regular,
-    Orbitron_500Medium,
-    Orbitron_600SemiBold,
-    Orbitron_700Bold,
-    Orbitron_800ExtraBold,
-    Orbitron_900Black,
+    'SpaceMono-Italic': require('../assets/fonts/SpaceMono-Italic.ttf'),
+    'SpaceMono-Bold': require('../assets/fonts/SpaceMono-Bold.ttf'),
+    'SpaceMono-BoldItalic': require('../assets/fonts/SpaceMono-BoldItalic.ttf'),
     ...FontAwesome.font,
   });
   const [isSplashReady, setSplashReady] = useState(false);

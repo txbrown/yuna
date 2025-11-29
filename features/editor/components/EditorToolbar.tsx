@@ -34,7 +34,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   onToggleStrikeThrough,
   onToggleList,
   isVisible = true,
-  showItalic = false, // Hide italic by default (Orbitron doesn't support it)
+  showItalic = true, // SpaceMono supports italics
 }) => {
   const bottomPosition = useSharedValue(DEFAULT_BOTTOM);
   const opacity = useSharedValue(isVisible ? 1 : 0);
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: 'bold',
-    fontFamily: 'Orbitron_700Bold',
+    fontFamily: 'SpaceMono-Bold',
     color: '#333',
   },
   buttonTextActive: {
