@@ -63,7 +63,6 @@ export interface EditorProps {
   onToggleUnderline: () => void;
   onToggleStrikeThrough: () => void;
   onToggleList: () => void;
-  backgroundPreset?: 'sunny' | 'rainy';
   headerTitle?: string;
   onHeaderBackPress?: () => void;
   onHeaderSharePress?: () => void;

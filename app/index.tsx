@@ -1,26 +1,17 @@
-import { useRouter } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { AmbientBackground } from '@/components/AmbientBackground';
-import { Text as ThemedText } from '@/components/Themed';
 
 export default function HomeScreen() {
-  const router = useRouter();
-
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: true }} />
       <AmbientBackground />
 
       <View style={styles.contentContainer}>
-        <ThemedText style={styles.title}>Welcome to Yuna</ThemedText>
-        <View
-          style={styles.separator}
-          lightColor='#eee'
-          darkColor='rgba(255,255,255,0.1)'
-        />
-        <ThemedText style={styles.subtitle}>Your personal AI assistant</ThemedText>
-        
+        <Text style={styles.title}>Welcome to Yuna</Text>
         <TouchableOpacity
           style={styles.button}
           onPress={() => router.push('/editor')}
@@ -50,11 +41,6 @@ const styles = StyleSheet.create({
     fontFamily: 'SpaceMono',
     textAlign: 'center',
   },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
   subtitle: {
     fontSize: 18,
     color: '#666',
@@ -63,7 +49,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    marginTop: 40,
     backgroundColor: '#2C2C2C',
     paddingHorizontal: 32,
     paddingVertical: 16,

@@ -68,7 +68,6 @@ export default function EditorScreen() {
       onToggleUnderline={handleToggleUnderline}
       onToggleStrikeThrough={handleToggleStrikeThrough}
       onToggleList={handleToggleList}
-      backgroundPreset="sunny"
       onHeaderBackPress={handleBackPress}
       onSelectionChange={handleSelectionChange}
       inputRef={inputRef}

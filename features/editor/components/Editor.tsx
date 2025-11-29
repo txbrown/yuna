@@ -1,4 +1,4 @@
-import { AnimatedBackground } from '@shared/components/AnimatedBackground';
+import { AmbientBackground } from '@/components/AmbientBackground';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { EditorProps } from '../types';
@@ -30,7 +30,6 @@ export const Editor: React.FC<EditorProps> = ({
   onToggleUnderline,
   onToggleStrikeThrough,
   onToggleList,
-  backgroundPreset,
   headerTitle,
   onHeaderBackPress,
   onHeaderSharePress,
@@ -50,37 +49,36 @@ export const Editor: React.FC<EditorProps> = ({
 
   return (
     <View style={styles.container}>
-      <AnimatedBackground preset={backgroundPreset}>
-        <View style={styles.editorContainer}>
-          <EditorHeader
-            title={headerTitle}
-            onBackPress={onHeaderBackPress}
-            onSharePress={onHeaderSharePress}
-          />
-          <EditorContent
-            content={content}
-            onChangeText={onChangeText}
-            onEditorModeChange={handleEditorModeChange}
-            onSelectionChange={onSelectionChange}
-            inputRef={inputRef}
-            onChangeState={onChangeState}
-          />
-          <EditorToolbar
-            isBoldActive={isBoldActive}
-            isItalicActive={isItalicActive}
-            isUnderlineActive={isUnderlineActive}
-            isStrikeThroughActive={isStrikeThroughActive}
-            isListActive={isListActive}
-            onToggleBold={onToggleBold}
-            onToggleItalic={onToggleItalic}
-            onToggleUnderline={onToggleUnderline}
-            onToggleStrikeThrough={onToggleStrikeThrough}
-            onToggleList={onToggleList}
-            isVisible={isInEditorMode}
-            showItalic={false} // Hide italic since Orbitron doesn't support it
-          />
-        </View>
-      </AnimatedBackground>
+      <AmbientBackground />
+      <View style={styles.editorContainer}>
+        <EditorHeader
+          title={headerTitle}
+          onBackPress={onHeaderBackPress}
+          onSharePress={onHeaderSharePress}
+        />
+        <EditorContent
+          content={content}
+          onChangeText={onChangeText}
+          onEditorModeChange={handleEditorModeChange}
+          onSelectionChange={onSelectionChange}
+          inputRef={inputRef}
+          onChangeState={onChangeState}
+        />
+        <EditorToolbar
+          isBoldActive={isBoldActive}
+          isItalicActive={isItalicActive}
+          isUnderlineActive={isUnderlineActive}
+          isStrikeThroughActive={isStrikeThroughActive}
+          isListActive={isListActive}
+          onToggleBold={onToggleBold}
+          onToggleItalic={onToggleItalic}
+          onToggleUnderline={onToggleUnderline}
+          onToggleStrikeThrough={onToggleStrikeThrough}
+          onToggleList={onToggleList}
+          isVisible={isInEditorMode}
+          showItalic={false} // Hide italic since Orbitron doesn't support it
+        />
+      </View>
     </View>
   );
 };
