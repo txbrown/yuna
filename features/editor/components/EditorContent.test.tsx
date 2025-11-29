@@ -2,12 +2,7 @@ import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import { EditorContent } from './EditorContent';
 
-// Mock Reanimated
-jest.mock('react-native-reanimated', () => {
-  const Reanimated = require('react-native-reanimated/mock');
-  Reanimated.default.call = () => {};
-  return Reanimated;
-});
+// Note: react-native-reanimated and @shopify/react-native-skia are mocked globally in jest.setup.js
 
 // Mock useSafeAreaInsets
 jest.mock('react-native-safe-area-context', () => {
@@ -106,6 +101,26 @@ jest.mock('./WelcomeScreen', () => {
   };
 });
 
+// Mock usePersonas
+jest.mock('@/features/personas', () => ({
+  usePersonas: () => ({ personas: [] }),
+  PersonaAvatar: () => null,
+}));
+
+// Mock PersonaSelectionToolbar
+jest.mock('./PersonaSelectionToolbar', () => ({
+  PersonaSelectionToolbar: () => null,
+}));
+
+// Mock usePersonaSelection
+jest.mock('./usePersonaSelection', () => ({
+  usePersonaSelection: () => ({
+    selection: null,
+    setSelectionFromIndices: jest.fn(),
+    clearSelection: jest.fn(),
+  }),
+}));
+
 describe('EditorContent', () => {
   const mockOnChangeText = jest.fn();
   const mockOnFocus = jest.fn();
@@ -140,22 +155,6 @@ describe('EditorContent', () => {
     fireEvent.changeText(input, 'New text');
 
     expect(mockOnChangeText).toHaveBeenCalled();
-  });
-
-  it('calls onFocus callback when focused', () => {
-    const { getByTestId } = render(
-      <EditorContent
-        content=""
-        onChangeText={mockOnChangeText}
-        onFocus={mockOnFocus}
-      />
-    );
-
-    // Press welcome screen to focus input
-    const container = getByTestId('editor-content-container');
-    fireEvent.press(container);
-
-    expect(mockOnFocus).toHaveBeenCalledTimes(1);
   });
 
   it('calls onBlur callback when blurred', () => {

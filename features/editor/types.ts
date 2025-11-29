@@ -15,7 +15,7 @@ export interface EditorContentProps {
   onBlur?: () => void;
   placeholder?: string;
   onEditorModeChange?: (isInEditorMode: boolean) => void;
-  onSelectionChange?: (start: number, end: number) => void;
+  onSelectionChange?: (start: number, end: number, text?: string) => void;
   inputRef?: React.RefObject<any>; // Ref to EnrichedTextInputInstance
   onChangeState?: (state: any) => void; // For style state updates
 }
@@ -66,7 +66,7 @@ export interface EditorProps {
   headerTitle?: string;
   onHeaderBackPress?: () => void;
   onHeaderSharePress?: () => void;
-  onSelectionChange?: (start: number, end: number) => void;
+  onSelectionChange?: (start: number, end: number, text?: string) => void;
   inputRef?: React.RefObject<any>; // Ref to EnrichedTextInputInstance
   onEditorModeChange?: (isEditing: boolean) => void;
   onChangeState?: (state: any) => void; // For style state updates

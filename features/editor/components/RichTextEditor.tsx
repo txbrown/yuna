@@ -14,7 +14,7 @@ export interface RichTextEditorProps {
   onFocus?: () => void;
   onBlur?: () => void;
   onChangeState?: (state: any) => void;
-  onChangeSelection?: (start: number, end: number) => void;
+  onChangeSelection?: (start: number, end: number, text?: string) => void;
   style?: ViewStyle;
   placeholder?: string;
   cursorColor?: string;
@@ -76,9 +76,11 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
   };
 
   const handleSelectionChange = (event: any) => {
-    const { start, end } = event.nativeEvent;
+    const { start, end, text } = event.nativeEvent;
     if (onChangeSelection) {
-      onChangeSelection(start, end);
+      // Extract text from event if available, otherwise extract from content
+      const selectedText = text || content.substring(start, end);
+      onChangeSelection(start, end, selectedText);
     }
   };
 

@@ -3,12 +3,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { Keyboard } from 'react-native';
 import { EditorToolbar } from './EditorToolbar';
 
-// Mock Reanimated
-jest.mock('react-native-reanimated', () => {
-  const Reanimated = require('react-native-reanimated/mock');
-  Reanimated.default.call = () => {};
-  return Reanimated;
-});
+// Note: react-native-reanimated is mocked globally in jest.setup.js
 
 // Mock Keyboard
 const mockKeyboardListeners: { [key: string]: (e: any) => void } = {};

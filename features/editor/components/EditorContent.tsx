@@ -1,3 +1,5 @@
+import { usePersonas } from '@/features/personas';
+import type { Persona } from '@/features/personas/models/persona';
 import React, { useRef } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Markdown from 'react-native-markdown-display';
@@ -8,8 +10,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { EditorContentProps } from '../types';
+import { PersonaSelectionToolbar } from './PersonaSelectionToolbar';
 import { RichTextEditor, type RichTextEditorRef } from './RichTextEditor';
 import { WelcomeScreen } from './WelcomeScreen';
+import { usePersonaSelection } from './usePersonaSelection';
 
 const isEmpty = (text: string) => text.trim().length === 0;
 
@@ -35,9 +39,15 @@ export const EditorContent: React.FC<EditorContentProps> = ({
   onChangeState,
 }) => {
   const internalInputRef = useRef<RichTextEditorRef>(null);
+  const editorContainerRef = useRef<View>(null);
   const insets = useSafeAreaInsets();
   const [hasFocused, setHasFocused] = React.useState(false);
   const showWelcome = isEmpty(content) && !hasFocused;
+
+  // Persona management
+  const { personas } = usePersonas();
+  const { selection, setSelectionFromIndices, clearSelection } =
+    usePersonaSelection(content);
   
   // Calculate header height: safe area top + header padding top (8) + content min height (44) + header padding bottom (12)
   const headerHeight = insets.top + 8 + 44 + 12;
@@ -90,11 +100,33 @@ export const EditorContent: React.FC<EditorContentProps> = ({
     }
   };
 
-  const handleSelectionChange = (start: number, end: number) => {
+  const handleSelectionChange = (
+    start: number,
+    end: number,
+    text?: string
+  ) => {
+    // Update selection state
+    setSelectionFromIndices(start, end, text);
+
+    // Also call parent callback
     if (onSelectionChange) {
-      onSelectionChange(start, end);
+      onSelectionChange(start, end, text);
     }
   };
+
+
+  // Handle persona selection
+  const handlePersonaSelect = React.useCallback(
+    (persona: Persona, selection: { start: number; end: number; text: string }) => {
+      // TODO: Implement persona annotation handling (e.g., trigger AI response)
+      console.log(`Persona ${persona.name} selected for text: "${selection.text}"`);
+      
+      // Clear selection
+      clearSelection();
+    },
+    [clearSelection]
+  );
+
 
   // Expose methods via ref for toolbar actions
   React.useImperativeHandle(
@@ -117,7 +149,11 @@ export const EditorContent: React.FC<EditorContentProps> = ({
   });
 
   return (
-    <View testID="editor-content-container" style={styles.container}>
+    <View
+      testID="editor-content-container"
+      ref={editorContainerRef}
+      style={styles.container}
+    >
       <WelcomeScreen
         visible={showWelcome}
         editorStartPosition={editorStartPosition}
@@ -156,6 +192,17 @@ export const EditorContent: React.FC<EditorContentProps> = ({
           </View>
         )}
       </Animated.View>
+
+      {/* Persona Selection Toolbar - In nav bar area on the right */}
+      <PersonaSelectionToolbar
+        visible={!!selection && selection.start !== selection.end}
+        selection={selection}
+        headerHeight={headerHeight}
+        personas={personas}
+        onPersonaSelect={handlePersonaSelect}
+        onDismiss={clearSelection}
+      />
+
     </View>
   );
 };
