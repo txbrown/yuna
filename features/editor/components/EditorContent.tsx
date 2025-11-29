@@ -1,6 +1,6 @@
-import { usePersonas } from '@/features/personas';
+import { cactusService, usePersonas } from '@/features/personas';
 import type { Persona } from '@/features/personas/models/persona';
-import React, { useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import Animated, {
@@ -10,10 +10,13 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { EditorContentProps } from '../types';
+import {
+  PersonaResponse,
+  PersonaResponseBottomSheet,
+} from './PersonaResponseBottomSheet';
 import { PersonaSelectionToolbar } from './PersonaSelectionToolbar';
 import { RichTextEditor, type RichTextEditorRef } from './RichTextEditor';
 import { WelcomeScreen } from './WelcomeScreen';
-import { usePersonaSelection } from './usePersonaSelection';
 
 const isEmpty = (text: string) => text.trim().length === 0;
 
@@ -46,12 +49,14 @@ export const EditorContent: React.FC<EditorContentProps> = ({
 
   // Persona management
   const { personas } = usePersonas();
-  const { selection, setSelectionFromIndices, clearSelection } =
-    usePersonaSelection(content);
-  
+  const [showBottomSheet, setShowBottomSheet] = useState(false);
+  const [personaResponses, setPersonaResponses] = useState<PersonaResponse[]>(
+    []
+  );
+
   // Calculate header height: safe area top + header padding top (8) + content min height (44) + header padding bottom (12)
   const headerHeight = insets.top + 8 + 44 + 12;
-  
+
   // Editor start position (where text begins)
   const editorStartPosition = {
     x: 20, // padding
@@ -100,33 +105,114 @@ export const EditorContent: React.FC<EditorContentProps> = ({
     }
   };
 
-  const handleSelectionChange = (
-    start: number,
-    end: number,
-    text?: string
-  ) => {
-    // Update selection state
-    setSelectionFromIndices(start, end, text);
-
-    // Also call parent callback
+  const handleSelectionChange = (start: number, end: number, text?: string) => {
+    // Call parent callback
     if (onSelectionChange) {
       onSelectionChange(start, end, text);
     }
   };
 
+  // Handle persona press - fetch responses and show bottom sheet
+  const handlePersonaPress = useCallback(
+    async (persona: Persona) => {
+      // Don't proceed if there's no content to analyze
+      if (isEmpty(content)) {
+        return;
+      }
 
-  // Handle persona selection
-  const handlePersonaSelect = React.useCallback(
-    (persona: Persona, selection: { start: number; end: number; text: string }) => {
-      // TODO: Implement persona annotation handling (e.g., trigger AI response)
-      console.log(`Persona ${persona.name} selected for text: "${selection.text}"`);
-      
-      // Clear selection
-      clearSelection();
+      // Initialize loading state for all personas
+      const initialResponses: PersonaResponse[] = personas.map((p) => ({
+        personaId: p.id,
+        response: '',
+        isLoading: true,
+      }));
+
+      setPersonaResponses(initialResponses);
+      setShowBottomSheet(true);
+
+      // Ensure Cactus is initialized
+      try {
+        if (!cactusService.isInitialized()) {
+          await cactusService.initialize('qwen3-0.6');
+
+          // Check if model is downloaded
+          const isDownloaded = await cactusService.isModelDownloaded(
+            'qwen3-0.6'
+          );
+          if (!isDownloaded) {
+            // Model not downloaded - update all responses with error
+            setPersonaResponses((prev) =>
+              prev.map((r) => ({
+                ...r,
+                response:
+                  'Model not downloaded. Please download the AI model in settings first.',
+                isLoading: false,
+              }))
+            );
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to initialize Cactus:', error);
+        setPersonaResponses((prev) =>
+          prev.map((r) => ({
+            ...r,
+            response: 'Failed to initialize AI service',
+            isLoading: false,
+          }))
+        );
+        return;
+      }
+
+      // Fetch responses for each persona using their system prompts
+      personas.forEach(async (p) => {
+        try {
+          const result = await cactusService.complete({
+            messages: [
+              {
+                role: 'system',
+                content: p.systemPrompt,
+              },
+              {
+                role: 'user',
+                content: `Please analyze the following text and provide your thoughts from your unique perspective:\n\n${content}`,
+              },
+            ],
+            temperature: p.temperature,
+            maxTokens: p.maxTokens,
+          });
+
+          setPersonaResponses((prev) =>
+            prev.map((r) =>
+              r.personaId === p.id
+                ? { ...r, response: result.response, isLoading: false }
+                : r
+            )
+          );
+        } catch (error) {
+          console.error(`Failed to get response from ${p.name}:`, error);
+          setPersonaResponses((prev) =>
+            prev.map((r) =>
+              r.personaId === p.id
+                ? {
+                    ...r,
+                    response: `Failed to generate response: ${
+                      (error as Error).message
+                    }`,
+                    isLoading: false,
+                  }
+                : r
+            )
+          );
+        }
+      });
     },
-    [clearSelection]
+    [personas, content]
   );
 
+  const handleDismissBottomSheet = useCallback(() => {
+    setShowBottomSheet(false);
+  }, []);
 
   // Expose methods via ref for toolbar actions
   React.useImperativeHandle(
@@ -135,8 +221,10 @@ export const EditorContent: React.FC<EditorContentProps> = ({
       toggleBold: () => internalInputRef.current?.toggleBold(),
       toggleItalic: () => internalInputRef.current?.toggleItalic(),
       toggleUnderline: () => internalInputRef.current?.toggleUnderline(),
-      toggleStrikeThrough: () => internalInputRef.current?.toggleStrikeThrough(),
-      toggleUnorderedList: () => internalInputRef.current?.toggleUnorderedList(),
+      toggleStrikeThrough: () =>
+        internalInputRef.current?.toggleStrikeThrough(),
+      toggleUnorderedList: () =>
+        internalInputRef.current?.toggleUnorderedList(),
       focus: () => internalInputRef.current?.focus(),
     }),
     []
@@ -150,7 +238,7 @@ export const EditorContent: React.FC<EditorContentProps> = ({
 
   return (
     <View
-      testID="editor-content-container"
+      testID='editor-content-container'
       ref={editorContainerRef}
       style={styles.container}
     >
@@ -164,10 +252,7 @@ export const EditorContent: React.FC<EditorContentProps> = ({
         {/* Show formatted markdown when not focused */}
         {!hasFocused && content ? (
           <Pressable
-            style={[
-              styles.formattedView,
-              { paddingTop: headerHeight + 20 },
-            ]}
+            style={[styles.formattedView, { paddingTop: headerHeight + 20 }]}
             onPress={() => {
               setHasFocused(true);
               internalInputRef.current?.focus();
@@ -177,7 +262,9 @@ export const EditorContent: React.FC<EditorContentProps> = ({
           </Pressable>
         ) : (
           /* Use EnrichedTextInput when editing - shows formatted text while editing */
-          <View style={[styles.inputContainer, { paddingTop: headerHeight + 20 }]}>
+          <View
+            style={[styles.inputContainer, { paddingTop: headerHeight + 20 }]}
+          >
             <RichTextEditor
               ref={internalInputRef}
               content={content}
@@ -187,22 +274,26 @@ export const EditorContent: React.FC<EditorContentProps> = ({
               onFocus={handleFocus}
               onBlur={handleBlur}
               style={styles.input}
-              placeholder=""
+              placeholder=''
             />
           </View>
         )}
       </Animated.View>
 
-      {/* Persona Selection Toolbar - In nav bar area on the right */}
+      {/* Persona Selection Toolbar - Always visible, floating in nav bar area */}
       <PersonaSelectionToolbar
-        visible={!!selection && selection.start !== selection.end}
-        selection={selection}
         headerHeight={headerHeight}
         personas={personas}
-        onPersonaSelect={handlePersonaSelect}
-        onDismiss={clearSelection}
+        onPersonaPress={handlePersonaPress}
       />
 
+      {/* Persona Response Bottom Sheet */}
+      <PersonaResponseBottomSheet
+        visible={showBottomSheet}
+        personas={personas}
+        responses={personaResponses}
+        onDismiss={handleDismissBottomSheet}
+      />
     </View>
   );
 };
@@ -261,4 +352,3 @@ const markdownStyles = {
     marginBottom: 0,
   },
 };
-
