@@ -59,16 +59,34 @@ export default function PersonasDebugScreen() {
   ];
 
   useEffect(() => {
-    checkModelStatuses();
-    // Check if service is already initialized
-    if (cactusService.isInitialized()) {
-      const currentModel = cactusService.getCurrentModel();
-      if (currentModel) {
-        setIsInitialized(true);
-        setSelectedModel(currentModel);
+    const initialiseModels = async () => {
+      // Check download / initialization status for all models
+      const statuses = await checkModelStatuses();
+
+      // If a model is already downloaded but the service is not initialised,
+      // automatically initialise the selected model (or default)
+      const targetModel: CactusModel = selectedModel || 'qwen3-0.6';
+      const targetStatus = statuses[targetModel];
+
+      if (!cactusService.isInitialized() && targetStatus?.downloaded) {
+        try {
+          await cactusService.initialize(targetModel);
+          setIsInitialized(true);
+        } catch (error) {
+          console.error('Failed to initialise Cactus model:', error);
+        }
+      } else if (!selectedModel && cactusService.isInitialized()) {
+        // On first load, if Cactus is already initialised, sync the selected model once
+        const currentModel = cactusService.getCurrentModel();
+        if (currentModel) {
+          setIsInitialized(true);
+          setSelectedModel(currentModel);
+        }
       }
-    }
-  }, []);
+    };
+
+    void initialiseModels();
+  }, [selectedModel]);
 
   // Auto-select first persona if none selected
   useEffect(() => {
@@ -100,6 +118,7 @@ export default function PersonasDebugScreen() {
     }
 
     setModelStatuses(statuses);
+    return statuses;
   };
 
   const handleDownloadModel = async () => {

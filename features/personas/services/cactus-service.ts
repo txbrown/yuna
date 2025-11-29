@@ -102,15 +102,17 @@ export class CactusService {
 
   async isModelDownloaded(model: CactusModel): Promise<boolean> {
     try {
-      // Try to initialize and check if we can use the model without downloading
-      // This is a heuristic - if initialize succeeds, we assume the model might be available
-      // The actual check would depend on CactusLM's internal implementation
-      const tempInstance = new CactusLM({ model });
+      // Use CactusLM's getModels API to check if the model is already downloaded
+      // This relies on the underlying CactusFileSystem.modelExists implementation
+      const tempInstance = new CactusLM();
+      // getModels returns metadata including an isDownloaded flag per model
+      // The runtime implementation has this method even if TypeScript types don't expose it
+      const models = await (tempInstance as any).getModels();
+      const entry = models.find(
+        (m: { slug: string; isDownloaded: boolean }) => m.slug === model
+      );
 
-      // If CactusLM has an isDownloaded method, use it
-      // Otherwise, we'll try to use the model and catch errors
-      // For now, we'll return false and let the download handle it
-      return false;
+      return entry?.isDownloaded ?? false;
     } catch {
       return false;
     }
