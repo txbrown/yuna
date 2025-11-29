@@ -1,29 +1,33 @@
-import { StyleSheet, TouchableOpacity } from 'react-native';
 import { Link } from 'expo-router';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 
 import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+import { Text as ThemedText, View as ThemedView } from '@/components/Themed';
 
 export default function TabOneScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
+    <ThemedView style={styles.container}>
+      <ThemedText style={styles.title}>Tab One</ThemedText>
+      <ThemedView
+        style={styles.separator}
+        lightColor='#eee'
+        darkColor='rgba(255,255,255,0.1)'
+      />
 
-      <Link href="/debug/notes" asChild>
+      <Link href='/debug/notes' asChild>
         <TouchableOpacity style={styles.debugButton}>
           <Text style={styles.debugButtonText}>Open Notes Debug Screen</Text>
         </TouchableOpacity>
       </Link>
 
-      <Link href="/debug/personas" asChild>
+      <Link href='/debug/personas' asChild>
         <TouchableOpacity style={[styles.debugButton, styles.personasButton]}>
           <Text style={styles.debugButtonText}>Open Personas Debug Screen</Text>
         </TouchableOpacity>
       </Link>
 
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
-    </View>
+      <EditScreenInfo path='app/(tabs)/index.tsx' />
+    </ThemedView>
   );
 }
 
@@ -48,6 +52,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     marginBottom: 12,
+    minWidth: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   personasButton: {
     backgroundColor: '#9c27b0',
@@ -56,5 +63,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+    textAlign: 'center',
   },
 });
