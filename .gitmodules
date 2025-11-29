@@ -1,0 +1,3 @@
+[submodule "examples/cactus-react-native"]
+	path = examples/cactus-react-native
+	url = https://github.com/cactus-compute/cactus-react-native.git
