@@ -1,25 +1,19 @@
 /**
  * @feature Editor
- * @description Rich text editor wrapper around EnrichedTextInput that handles HTML ↔ Markdown conversion
+ * @description Rich text editor wrapper around EnrichedTextInput that provides plain text content
  */
 
 import { Palette } from '@/constants/Colors';
-import React, {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-} from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { ViewStyle } from 'react-native';
 import {
   EnrichedTextInput,
   type EnrichedTextInputInstance,
 } from 'react-native-enriched';
-import { htmlToMarkdown, markdownToHtml } from '../utils/htmlMarkdownConverter';
 
 export interface RichTextEditorProps {
-  content: string; // Markdown content
-  onChangeText: (markdown: string) => void;
+  content: string; // Plain text content
+  onChangeText: (text: string) => void;
   onFocus?: () => void;
   onBlur?: () => void;
   onChangeState?: (state: any) => void;
@@ -64,24 +58,24 @@ export const RichTextEditor = forwardRef<
     // Sync content prop changes to EnrichedTextInput using setValue
     useEffect(() => {
       if (content !== lastContentRef.current && inputRef.current) {
-        const html = markdownToHtml(content);
-        // Use setValue to update the editor content
-        inputRef.current.setValue(html);
+        // Use setValue to update the editor content (accepts plain text)
+        inputRef.current.setValue(content);
         lastContentRef.current = content;
       }
     }, [content]);
 
-    const handleHtmlChange = (event: any) => {
-      const html = event.nativeEvent.html || '';
-      // Convert HTML to markdown for storage
-      const markdown = htmlToMarkdown(html);
-      lastContentRef.current = markdown;
-      onChangeText(markdown);
+    const handleTextChange = (event: any) => {
+      // Get plain text directly from the editor
+      const text = event.nativeEvent.value || '';
+      console.log('RichTextEditor - Plain text received:', text);
+      lastContentRef.current = text;
+      onChangeText(text);
     };
 
-    const handleTextChange = (event: any) => {
-      // Text change is handled via HTML change
-      // This is just for compatibility
+    const handleHtmlChange = (event: any) => {
+      // We're using plain text now, but keep this for debugging
+      const html = event.nativeEvent.value || '';
+      console.log('RichTextEditor - HTML received:', html);
     };
 
     const handleStateChange = (event: any) => {
@@ -154,8 +148,8 @@ export const RichTextEditor = forwardRef<
     return (
       <EnrichedTextInput
         ref={inputRef}
-        onChangeHtml={handleHtmlChange}
         onChangeText={handleTextChange}
+        onChangeHtml={handleHtmlChange}
         onChangeState={handleStateChange}
         onChangeSelection={handleSelectionChange}
         onFocus={onFocus}

@@ -1,5 +1,4 @@
 import { cactusService, usePersonas } from '@/features/personas';
-import type { Persona } from '@/features/personas/models/persona';
 import React, { useCallback, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Markdown from 'react-native-markdown-display';
@@ -46,6 +45,15 @@ export const EditorContent: React.FC<EditorContentProps> = ({
   const insets = useSafeAreaInsets();
   const [hasFocused, setHasFocused] = React.useState(false);
   const showWelcome = isEmpty(content) && !hasFocused;
+
+  // Store latest content in ref to avoid stale closure issues
+  const contentRef = useRef(content);
+
+  // Debug content changes
+  React.useEffect(() => {
+    console.log('EditorContent - content updated:', content);
+    contentRef.current = content; // Keep ref in sync
+  }, [content]);
 
   // Persona management
   const { personas } = usePersonas();
@@ -105,6 +113,13 @@ export const EditorContent: React.FC<EditorContentProps> = ({
     }
   };
 
+  const handleTextChange = (text: string) => {
+    console.log('EditorContent - handleTextChange called with:', text);
+    if (onChangeText) {
+      onChangeText(text);
+    }
+  };
+
   const handleSelectionChange = (start: number, end: number, text?: string) => {
     // Call parent callback
     if (onSelectionChange) {
@@ -112,61 +127,86 @@ export const EditorContent: React.FC<EditorContentProps> = ({
     }
   };
 
-  // Handle persona press - fetch responses and show bottom sheet
-  const handlePersonaPress = useCallback(
-    async (persona: Persona) => {
-      // Don't proceed if there's no content to analyze
-      if (isEmpty(content)) {
-        return;
+  // Handle persona press - fetch responses from ALL personas and show bottom sheet
+  const handlePersonaPress = useCallback(async () => {
+    // Get the LATEST content from ref (avoids stale closure)
+    const currentContent = contentRef.current;
+
+    console.log('Opening persona analysis...');
+    console.log('Current content from ref:', currentContent);
+    console.log('Current content length:', currentContent.length);
+
+    // Initialize loading state for all personas
+    const initialResponses: PersonaResponse[] = personas.map((p) => ({
+      personaId: p.id,
+      response: '',
+      isLoading: true,
+    }));
+
+    setPersonaResponses(initialResponses);
+    setShowBottomSheet(true);
+
+    // Check if there's content to analyze
+    if (isEmpty(currentContent)) {
+      console.log('Content is empty, showing placeholder message');
+      setPersonaResponses(
+        personas.map((p) => ({
+          personaId: p.id,
+          response: 'Start typing in the editor to get my analysis!',
+          isLoading: false,
+        }))
+      );
+      return;
+    }
+
+    // Ensure Cactus is initialized
+    try {
+      console.log('Checking Cactus initialization...');
+
+      // Initialize if needed (will reuse existing instance if already initialized)
+      if (!cactusService.isInitialized()) {
+        console.log('Initializing Cactus service...');
+        await cactusService.initialize('qwen3-0.6');
+        console.log('Cactus service initialized successfully');
+      } else {
+        console.log('Cactus service already initialized');
       }
+    } catch (error) {
+      console.error('Failed to initialize Cactus:', error);
+      setPersonaResponses(
+        personas.map((p) => ({
+          personaId: p.id,
+          response: `Failed to initialize AI service: ${
+            (error as Error).message
+          }. The model might not be downloaded.`,
+          isLoading: false,
+        }))
+      );
+      return;
+    }
 
-      // Initialize loading state for all personas
-      const initialResponses: PersonaResponse[] = personas.map((p) => ({
-        personaId: p.id,
-        response: '',
-        isLoading: true,
-      }));
+    // Fetch responses for ALL personas using their system prompts
+    // Process SEQUENTIALLY to avoid concurrency issues with the AI model
+    console.log(`Getting analysis from ${personas.length} personas...`);
 
-      setPersonaResponses(initialResponses);
-      setShowBottomSheet(true);
-
-      // Ensure Cactus is initialized
-      try {
-        if (!cactusService.isInitialized()) {
-          await cactusService.initialize('qwen3-0.6');
-
-          // Check if model is downloaded
-          const isDownloaded = await cactusService.isModelDownloaded(
-            'qwen3-0.6'
-          );
-          if (!isDownloaded) {
-            // Model not downloaded - update all responses with error
-            setPersonaResponses((prev) =>
-              prev.map((r) => ({
-                ...r,
-                response:
-                  'Model not downloaded. Please download the AI model in settings first.',
-                isLoading: false,
-              }))
-            );
-            return;
-          }
-        }
-      } catch (error) {
-        console.error('Failed to initialize Cactus:', error);
-        setPersonaResponses((prev) =>
-          prev.map((r) => ({
-            ...r,
-            response: 'Failed to initialize AI service',
-            isLoading: false,
-          }))
-        );
-        return;
-      }
-
-      // Fetch responses for each persona using their system prompts
-      personas.forEach(async (p) => {
+    (async () => {
+      for (const p of personas) {
         try {
+          console.log(`Requesting analysis from ${p.name}`);
+
+          // Reset and reinitialize to ensure completely clean context for each persona
+          cactusService.reset();
+          await cactusService.initialize('qwen3-0.6');
+          console.log(`Fresh context initialized for ${p.name}`);
+
+          // Limit content length to avoid overwhelming the model (max ~500 chars)
+          const truncatedContent =
+            currentContent.length > 500
+              ? currentContent.substring(0, 500) + '...'
+              : currentContent;
+
+          const userMessage = `${truncatedContent}\n\nWhat do you think?`;
+
           const result = await cactusService.complete({
             messages: [
               {
@@ -175,22 +215,62 @@ export const EditorContent: React.FC<EditorContentProps> = ({
               },
               {
                 role: 'user',
-                content: `Please analyze the following text and provide your thoughts from your unique perspective:\n\n${content}`,
+                content: userMessage,
               },
             ],
             temperature: p.temperature,
-            maxTokens: p.maxTokens,
+            maxTokens: 150, // Keep responses concise and focused
           });
+
+          // Clean up the response - remove all meta-commentary and system artifacts
+          let cleanResponse = result.response;
+
+          // Remove <think>...</think> blocks (including multiline)
+          cleanResponse = cleanResponse.replace(
+            /<think>[\s\S]*?<\/think>/gi,
+            ''
+          );
+
+          // Remove standalone <think> or </think> tags
+          cleanResponse = cleanResponse.replace(/<\/?think>/gi, '');
+
+          // Remove special tokens like <|im_start|>, <|im_end|>, etc.
+          cleanResponse = cleanResponse.replace(/<\|[^|]+\|>/g, '');
+
+          // Remove special characters and arrows
+          cleanResponse = cleanResponse.replace(/[↑→]/g, '');
+
+          // Remove common meta-phrases that show up in responses
+          cleanResponse = cleanResponse.replace(
+            /^(Here's my analysis:|Let me analyze:|My thoughts:|My response:)\s*/i,
+            ''
+          );
+
+          // Remove "As a [persona]" prefixes
+          cleanResponse = cleanResponse.replace(/^As (a|an) .+?,\s*/i, '');
+
+          // Clean up extra whitespace and newlines
+          cleanResponse = cleanResponse.replace(/\n{3,}/g, '\n\n').trim();
+
+          // If response is too short or empty, provide fallback
+          if (cleanResponse.length < 10) {
+            cleanResponse = 'Interesting! Tell me more about this.';
+          }
+
+          console.log(
+            `✓ Received response from ${p.name}:`,
+            cleanResponse.substring(0, 100)
+          );
 
           setPersonaResponses((prev) =>
             prev.map((r) =>
               r.personaId === p.id
-                ? { ...r, response: result.response, isLoading: false }
+                ? { ...r, response: cleanResponse, isLoading: false }
                 : r
             )
           );
         } catch (error) {
-          console.error(`Failed to get response from ${p.name}:`, error);
+          console.error(`✗ Failed to get response from ${p.name}:`, error);
           setPersonaResponses((prev) =>
             prev.map((r) =>
               r.personaId === p.id
@@ -205,10 +285,9 @@ export const EditorContent: React.FC<EditorContentProps> = ({
             )
           );
         }
-      });
-    },
-    [personas, content]
-  );
+      }
+    })();
+  }, [personas]); // Remove content from dependencies since we use contentRef
 
   const handleDismissBottomSheet = useCallback(() => {
     setShowBottomSheet(false);
@@ -249,7 +328,7 @@ export const EditorContent: React.FC<EditorContentProps> = ({
       />
 
       <Animated.View style={[styles.editorWrapper, editorStyle]}>
-        {/* Show formatted markdown when not focused */}
+        {/* Show plain text when not focused */}
         {!hasFocused && content ? (
           <Pressable
             style={[styles.formattedView, { paddingTop: headerHeight + 20 }]}
@@ -268,7 +347,7 @@ export const EditorContent: React.FC<EditorContentProps> = ({
             <RichTextEditor
               ref={internalInputRef}
               content={content}
-              onChangeText={onChangeText}
+              onChangeText={handleTextChange}
               onChangeState={onChangeState}
               onChangeSelection={handleSelectionChange}
               onFocus={handleFocus}

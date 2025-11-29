@@ -85,6 +85,7 @@ export class CactusService {
           temperature: options.temperature,
           maxTokens: options.maxTokens,
         },
+        mode: 'local',
       });
 
       return {

@@ -3,37 +3,34 @@
  * @description Floating toolbar that displays personas and triggers bottom sheet on press
  */
 
-import React, { useEffect, useRef } from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-} from 'react-native';
 import { PersonaAvatar } from '@/features/personas';
 import { Persona } from '@/features/personas/models/persona';
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export interface PersonaSelectionToolbarProps {
   headerHeight: number; // Header height for positioning in nav bar area
   personas: Persona[];
-  onPersonaPress: (persona: Persona) => void;
+  onPersonaPress: () => void; // Opens bottom sheet with ALL persona analyses
 }
 
 /**
  * Always-visible floating toolbar for persona selection - positioned in nav bar area on the right
  */
-export const PersonaSelectionToolbar: React.FC<PersonaSelectionToolbarProps> = ({
-  headerHeight,
-  personas,
-  onPersonaPress,
-}) => {
+export const PersonaSelectionToolbar: React.FC<
+  PersonaSelectionToolbarProps
+> = ({ headerHeight, personas, onPersonaPress }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   // Calculate position: center vertically in header content area
   const toolbarHeight = 40;
   const headerContentHeight = 44;
   const headerPaddingBottom = 12;
-  const toolbarTop = headerHeight - headerPaddingBottom - (headerContentHeight / 2) - (toolbarHeight / 2);
+  const toolbarTop =
+    headerHeight -
+    headerPaddingBottom -
+    headerContentHeight / 2 -
+    toolbarHeight / 2;
 
   // Fade in on mount
   useEffect(() => {
@@ -57,7 +54,7 @@ export const PersonaSelectionToolbar: React.FC<PersonaSelectionToolbarProps> = (
           opacity: fadeAnim,
         },
       ]}
-      pointerEvents="box-none"
+      pointerEvents='box-none'
     >
       <View style={styles.toolbarContent}>
         {personas.map((persona, index) => (
@@ -67,10 +64,10 @@ export const PersonaSelectionToolbar: React.FC<PersonaSelectionToolbarProps> = (
               styles.personaButton,
               index > 0 && styles.personaButtonSpacing,
             ]}
-            onPress={() => onPersonaPress(persona)}
+            onPress={onPersonaPress}
             activeOpacity={0.7}
           >
-            <PersonaAvatar persona={persona} size="small" />
+            <PersonaAvatar persona={persona} size='small' />
           </TouchableOpacity>
         ))}
       </View>
@@ -107,4 +104,3 @@ const styles = StyleSheet.create({
     // Additional spacing handled by gap
   },
 });
-

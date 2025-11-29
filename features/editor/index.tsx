@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Editor } from './components/Editor';
 import type { RichTextEditorRef } from './components/RichTextEditor';
 
@@ -76,4 +76,3 @@ export default function EditorScreen() {
     />
   );
 }
-
