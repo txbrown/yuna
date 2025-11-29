@@ -1,5 +1,6 @@
 import {
   Persona,
+  PersonaAvatar,
   PersonaChat,
   PersonaEditor,
   PersonaList,
@@ -44,6 +45,7 @@ export default function PersonasDebugScreen() {
     updatePersona,
     deletePersona,
     resetToDefaults,
+    getPersona,
   } = usePersonas();
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
   const [editingPersona, setEditingPersona] = useState<Persona | null>(null);
@@ -216,7 +218,18 @@ export default function PersonasDebugScreen() {
         const newPersona = createPersona(data);
         setSelectedPersona(newPersona);
       } else if (editingPersona) {
-        updatePersona(editingPersona.id, data);
+        const updated = updatePersona(editingPersona.id, data);
+        // Update selectedPersona if it's the one being edited
+        // Use the updated persona from the repository to ensure we have the latest reference
+        if (updated && selectedPersona?.id === editingPersona.id) {
+          // Get fresh reference from repository to ensure consistency
+          const freshPersona = getPersona(editingPersona.id);
+          if (freshPersona) {
+            setSelectedPersona(freshPersona);
+          } else {
+            setSelectedPersona(updated);
+          }
+        }
       }
       setShowEditor(false);
       setEditingPersona(null);
@@ -377,7 +390,6 @@ export default function PersonasDebugScreen() {
         isLoading={isLoadingPersonas}
         onSelectPersona={(persona) => {
           setSelectedPersona(persona);
-          setActiveTab('chat');
         }}
         onEditPersona={handleEditPersona}
         onDeletePersona={handleDeletePersona}
@@ -435,12 +447,22 @@ export default function PersonasDebugScreen() {
   const renderChat = () => (
     <View style={styles.container}>
       <View style={styles.section}>
-        <Text style={styles.header}>Chat</Text>
-        <Text style={styles.subheader}>
-          {selectedPersona
-            ? `Chatting with ${selectedPersona.name}`
-            : 'Select a persona to start chatting'}
-        </Text>
+        <View style={styles.chatHeader}>
+          <Text style={styles.header}>Chat</Text>
+          {selectedPersona && (
+            <View style={styles.chatPersonaInfo}>
+              <PersonaAvatar persona={selectedPersona} size='medium' />
+              <Text style={styles.subheader}>
+                Chatting with {selectedPersona.name}
+              </Text>
+            </View>
+          )}
+          {!selectedPersona && (
+            <Text style={styles.subheader}>
+              Select a persona to start chatting
+            </Text>
+          )}
+        </View>
       </View>
 
       {!isInitialized && (
@@ -550,6 +572,15 @@ const styles = StyleSheet.create({
   },
   chatContainer: {
     flex: 1,
+  },
+  chatHeader: {
+    gap: 12,
+  },
+  chatPersonaInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 8,
   },
   modalContainer: {
     flex: 1,

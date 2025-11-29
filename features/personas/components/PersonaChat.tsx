@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { ChatMessage, usePersonaChat } from '../hooks/usePersonaChat';
 import { Persona } from '../models/persona';
+import { PersonaAvatar } from './PersonaAvatar';
 
 export interface PersonaChatProps {
   persona: Persona | null;
@@ -52,9 +53,14 @@ export const PersonaChat: React.FC<PersonaChatProps> = ({
         ]}
       >
         <View style={styles.messageHeader}>
-          <Text style={styles.messageRole}>
-            {isUser ? '👤 You' : '🤖 ' + (persona?.name || 'AI')}
-          </Text>
+          <View style={styles.messageRoleContainer}>
+            {!isUser && persona && (
+              <PersonaAvatar persona={persona} size='small' />
+            )}
+            <Text style={styles.messageRole}>
+              {isUser ? '👤 You' : persona?.name || 'AI'}
+            </Text>
+          </View>
           {message.usage && (
             <Text style={styles.messageUsage}>
               {message.usage.totalTokens} tokens
@@ -93,6 +99,7 @@ export const PersonaChat: React.FC<PersonaChatProps> = ({
       >
         {messages.length === 0 ? (
           <View style={styles.emptyChatContainer}>
+            <PersonaAvatar persona={persona} size='large' />
             <Text style={styles.emptyChatText}>
               Start a conversation with {persona.name}
             </Text>
@@ -187,6 +194,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
+  messageRoleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   messageRole: {
     fontSize: 12,
     fontWeight: '600',
@@ -216,6 +228,7 @@ const styles = StyleSheet.create({
   emptyChatContainer: {
     padding: 32,
     alignItems: 'center',
+    gap: 16,
   },
   emptyChatText: {
     fontSize: 18,

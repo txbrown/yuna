@@ -17,6 +17,12 @@ export type { PersonaChatProps } from './components/PersonaChat';
 export { PersonaEditor } from './components/PersonaEditor';
 export type { PersonaEditorProps } from './components/PersonaEditor';
 
+export { PersonaAvatar } from './components/PersonaAvatar';
+export type { PersonaAvatarProps } from './components/PersonaAvatar';
+
+export { AvatarSelector } from './components/AvatarSelector';
+export type { AvatarSelectorProps } from './components/AvatarSelector';
+
 // Hooks
 export { usePersonaChat } from './hooks/usePersonaChat';
 export type { ChatMessage } from './hooks/usePersonaChat';
@@ -42,7 +48,10 @@ export type {
 
 // Constants
 export {
+  AVATAR_PRESETS,
   DEFAULT_PERSONA_MAX_TOKENS,
   DEFAULT_PERSONA_TEMPERATURE,
   DEFAULT_PERSONAS,
+  getAvatarPreset,
 } from './constants';
+export type { AvatarPreset } from './constants';

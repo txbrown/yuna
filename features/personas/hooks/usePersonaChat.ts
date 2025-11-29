@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Persona } from '../models/persona';
 import { cactusService, CompletionMessage } from '../services/cactus-service';
 
@@ -20,6 +20,25 @@ export const usePersonaChat = (persona: Persona | null) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const previousPersonaIdRef = useRef<string | null>(null);
+
+  // Clear chat when persona changes (different persona or persona was updated)
+  useEffect(() => {
+    if (persona) {
+      const currentPersonaId = persona.id;
+      if (
+        previousPersonaIdRef.current !== null &&
+        previousPersonaIdRef.current !== currentPersonaId
+      ) {
+        // Different persona selected - clear chat
+        setMessages([]);
+        setError(null);
+      }
+      previousPersonaIdRef.current = currentPersonaId;
+    } else {
+      previousPersonaIdRef.current = null;
+    }
+  }, [persona]);
 
   const sendMessage = useCallback(
     async (userMessage: string) => {

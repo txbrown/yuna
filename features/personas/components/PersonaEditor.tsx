@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  View,
-  Text,
+  Alert,
+  ScrollView,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  Alert,
+  View,
 } from 'react-native';
 import { Persona } from '../models/persona';
+import { AvatarSelector } from './AvatarSelector';
+import { PersonaAvatar } from './PersonaAvatar';
 
 export interface PersonaEditorProps {
   persona: Persona | null;
@@ -35,6 +37,9 @@ export const PersonaEditor: React.FC<PersonaEditorProps> = ({
   const [maxTokens, setMaxTokens] = useState(
     persona?.maxTokens.toString() || '512'
   );
+  const [selectedPresetId, setSelectedPresetId] = useState<string>(
+    (persona?.avatarConfig?.presetId as string) || 'kid'
+  );
 
   const handleSave = () => {
     if (!name.trim()) {
@@ -43,7 +48,7 @@ export const PersonaEditor: React.FC<PersonaEditorProps> = ({
     }
 
     if (!systemPrompt.trim()) {
-      Alert.alert('Error', 'Please enter a system prompt');
+      Alert.alert('Error', 'Please enter instructions for the persona');
       return;
     }
 
@@ -66,18 +71,68 @@ export const PersonaEditor: React.FC<PersonaEditorProps> = ({
       systemPrompt: systemPrompt.trim(),
       temperature: tempValue,
       maxTokens: maxTokensValue,
+      avatarConfig: { presetId: selectedPresetId },
     });
   };
 
+  // Create temporary persona for avatar preview
+  const previewPersona = useMemo(
+    () => ({
+      id: 'preview_persona',
+      name: name || 'Preview',
+      description: '',
+      systemPrompt: '',
+      temperature: 0.7,
+      maxTokens: 512,
+      avatarConfig: { presetId: selectedPresetId },
+      createdAt: 0,
+      updatedAt: 0,
+    }),
+    [name, selectedPresetId]
+  );
+
   return (
     <ScrollView style={styles.container}>
+      {/* Avatar Selection Section */}
+      <View style={styles.avatarSection}>
+        <Text style={styles.sectionTitle}>Personalize your Persona</Text>
+        <View style={styles.avatarPreviewContainer}>
+          <PersonaAvatar persona={previewPersona} size='large' />
+          <View style={styles.avatarPreviewInfo}>
+            <TextInput
+              style={styles.nameInput}
+              value={name}
+              onChangeText={setName}
+              placeholder='Enter a name'
+              placeholderTextColor='#999'
+            />
+          </View>
+        </View>
+        <View style={styles.avatarSelectorContainer}>
+          <Text style={styles.avatarSelectorLabel}>Choose an avatar</Text>
+          <AvatarSelector
+            selectedPresetId={selectedPresetId}
+            onSelect={setSelectedPresetId}
+          />
+        </View>
+      </View>
+
+      {/* Instructions Section */}
       <View style={styles.section}>
-        <Text style={styles.label}>Name *</Text>
+        <View style={styles.instructionsHeader}>
+          <Text style={styles.label}>Instructions</Text>
+          <Text style={styles.hint}>
+            Use instructions to guide the persona's behavior
+          </Text>
+        </View>
         <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="e.g., 12 Year Old Kid"
+          style={[styles.input, styles.textArea]}
+          value={systemPrompt}
+          onChangeText={setSystemPrompt}
+          placeholder='You are a curious and energetic 12-year-old kid...'
+          multiline
+          numberOfLines={6}
+          textAlignVertical='top'
         />
       </View>
 
@@ -87,25 +142,21 @@ export const PersonaEditor: React.FC<PersonaEditorProps> = ({
           style={[styles.input, styles.textArea]}
           value={description}
           onChangeText={setDescription}
-          placeholder="A brief description of this persona"
+          placeholder='A brief description of this persona'
           multiline
           numberOfLines={3}
         />
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>System Prompt *</Text>
-        <Text style={styles.hint}>
-          This defines the persona's personality and behavior
-        </Text>
+        <Text style={styles.label}>Description</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
-          value={systemPrompt}
-          onChangeText={setSystemPrompt}
-          placeholder="You are a curious and energetic 12-year-old kid..."
+          value={description}
+          onChangeText={setDescription}
+          placeholder='A brief description of this persona'
           multiline
-          numberOfLines={6}
-          textAlignVertical="top"
+          numberOfLines={3}
         />
       </View>
 
@@ -117,8 +168,8 @@ export const PersonaEditor: React.FC<PersonaEditorProps> = ({
             style={styles.input}
             value={temperature}
             onChangeText={setTemperature}
-            keyboardType="decimal-pad"
-            placeholder="0.7"
+            keyboardType='decimal-pad'
+            placeholder='0.7'
           />
         </View>
 
@@ -129,8 +180,8 @@ export const PersonaEditor: React.FC<PersonaEditorProps> = ({
             style={styles.input}
             value={maxTokens}
             onChangeText={setMaxTokens}
-            keyboardType="number-pad"
-            placeholder="512"
+            keyboardType='number-pad'
+            placeholder='512'
           />
         </View>
       </View>
@@ -162,9 +213,52 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  avatarSection: {
+    padding: 24,
+    backgroundColor: '#f9f9f9',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  avatarPreviewContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  avatarPreviewInfo: {
+    marginTop: 16,
+    width: '100%',
+    maxWidth: 200,
+  },
+  nameInput: {
+    borderWidth: 1,
+    borderColor: '#2196f3',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: '#fff',
+    textAlign: 'center',
+  },
+  avatarSelectorContainer: {
+    marginTop: 16,
+  },
+  avatarSelectorLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
   section: {
     marginBottom: 16,
     paddingHorizontal: 16,
+  },
+  instructionsHeader: {
+    marginBottom: 8,
   },
   row: {
     flexDirection: 'row',
@@ -229,4 +323,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-

@@ -10,6 +10,7 @@ export const personaSchema = z.object({
   systemPrompt: z.string().min(1),
   temperature: z.number().min(0).max(2).default(0.7),
   maxTokens: z.number().positive().default(512),
+  avatarConfig: z.record(z.string(), z.unknown()).default({}),
   createdAt: z.number(),
   updatedAt: z.number(),
 });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Persona } from '../models/persona';
+import { PersonaAvatar } from './PersonaAvatar';
 
 export interface PersonaCardProps {
   persona: Persona;
@@ -27,7 +28,10 @@ export const PersonaCard: React.FC<PersonaCardProps> = ({
       activeOpacity={0.7}
     >
       <View style={styles.header}>
-        <Text style={styles.name}>{persona.name}</Text>
+        <View style={styles.avatarContainer}>
+          <PersonaAvatar persona={persona} size='medium' />
+          <Text style={styles.name}>{persona.name}</Text>
+        </View>
         {isSelected && <Text style={styles.selectedBadge}>● Active</Text>}
       </View>
       <Text style={styles.description} numberOfLines={2}>
@@ -92,7 +96,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
+  },
+  avatarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
   },
   name: {
     fontSize: 18,
