@@ -1,8 +1,7 @@
 import React, { useRef } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import Animated, {
-  interpolate,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -10,6 +9,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { EditorContentProps } from '../types';
 import { RichTextEditor, type RichTextEditorRef } from './RichTextEditor';
+import { WelcomeScreen } from './WelcomeScreen';
 
 const isEmpty = (text: string) => text.trim().length === 0;
 
@@ -38,10 +38,15 @@ export const EditorContent: React.FC<EditorContentProps> = ({
   const insets = useSafeAreaInsets();
   const [hasFocused, setHasFocused] = React.useState(false);
   const showWelcome = isEmpty(content) && !hasFocused;
-  const isInEditorMode = hasFocused || !isEmpty(content);
   
   // Calculate header height: safe area top + header padding top (8) + content min height (44) + header padding bottom (12)
   const headerHeight = insets.top + 8 + 44 + 12;
+  
+  // Editor start position (where text begins)
+  const editorStartPosition = {
+    x: 20, // padding
+    y: headerHeight + 20, // header height + padding
+  };
 
   React.useEffect(() => {
     if (onEditorModeChange) {
@@ -49,18 +54,16 @@ export const EditorContent: React.FC<EditorContentProps> = ({
       onEditorModeChange(hasFocused);
     }
   }, [hasFocused, onEditorModeChange]);
-  const welcomeOpacity = useSharedValue(showWelcome ? 1 : 0);
+
   const editorOpacity = useSharedValue(showWelcome ? 0 : 1);
 
   React.useEffect(() => {
     if (showWelcome) {
-      welcomeOpacity.value = withTiming(1, { duration: 300 });
       editorOpacity.value = withTiming(0, { duration: 300 });
     } else {
-      welcomeOpacity.value = withTiming(0, { duration: 300 });
       editorOpacity.value = withTiming(1, { duration: 300 });
     }
-  }, [showWelcome, welcomeOpacity, editorOpacity]);
+  }, [showWelcome, editorOpacity]);
 
   const handleWelcomePress = () => {
     setHasFocused(true);
@@ -107,17 +110,6 @@ export const EditorContent: React.FC<EditorContentProps> = ({
     []
   );
 
-  const welcomeStyle = useAnimatedStyle(() => {
-    return {
-      opacity: welcomeOpacity.value,
-      transform: [
-        {
-          translateY: interpolate(welcomeOpacity.value, [0, 1], [20, 0]),
-        },
-      ],
-    };
-  });
-
   const editorStyle = useAnimatedStyle(() => {
     return {
       opacity: editorOpacity.value,
@@ -125,20 +117,12 @@ export const EditorContent: React.FC<EditorContentProps> = ({
   });
 
   return (
-    <Pressable
-      testID="editor-content-container"
-      style={styles.container}
-      onPress={showWelcome ? handleWelcomePress : undefined}
-    >
-      {showWelcome && (
-        <Animated.View
-          testID="welcome-screen"
-          style={[styles.welcomeContainer, welcomeStyle]}
-        >
-          <Text style={styles.welcomeTitle}>ITS A GOOD DAY TO YUNA</Text>
-          <Text style={styles.welcomeSubtitle}>tap to get started</Text>
-        </Animated.View>
-      )}
+    <View testID="editor-content-container" style={styles.container}>
+      <WelcomeScreen
+        visible={showWelcome}
+        editorStartPosition={editorStartPosition}
+        onPress={handleWelcomePress}
+      />
 
       <Animated.View style={[styles.editorWrapper, editorStyle]}>
         {/* Show formatted markdown when not focused */}
@@ -172,7 +156,7 @@ export const EditorContent: React.FC<EditorContentProps> = ({
           </View>
         )}
       </Animated.View>
-    </Pressable>
+    </View>
   );
 };
 
@@ -181,32 +165,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
-  },
-  welcomeContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  welcomeTitle: {
-    fontSize: 42,
-    fontWeight: '700',
-    fontFamily: 'SpaceMono-Bold',
-    color: '#000',
-    textAlign: 'center',
-    marginBottom: 16,
-    letterSpacing: -0.5,
-  },
-  welcomeSubtitle: {
-    fontSize: 16,
-    fontWeight: '400',
-    fontFamily: 'SpaceMono',
-    color: '#666',
-    textAlign: 'center',
   },
   editorWrapper: {
     flex: 1,

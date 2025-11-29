@@ -85,6 +85,27 @@ jest.mock('react-native-markdown-display', () => {
   return ({ children }: { children: string }) => <Text>{children}</Text>;
 });
 
+// Mock WelcomeScreen
+jest.mock('./WelcomeScreen', () => {
+  const React = require('react');
+  const { View, Pressable } = require('react-native');
+  return {
+    WelcomeScreen: ({ visible, onPress, testID }: any) => {
+      if (!visible) return null;
+      return (
+        <View testID="welcome-screen">
+          <Pressable
+            testID="welcome-screen-pressable"
+            onPress={onPress}
+          >
+            <View />
+          </Pressable>
+        </View>
+      );
+    },
+  };
+});
+
 describe('EditorContent', () => {
   const mockOnChangeText = jest.fn();
   const mockOnFocus = jest.fn();
@@ -193,13 +214,11 @@ describe('EditorContent', () => {
   });
 
   it('shows welcome screen when content is empty and not focused', () => {
-    const { getByTestId, getByText } = render(
+    const { getByTestId } = render(
       <EditorContent content="" onChangeText={mockOnChangeText} />
     );
 
     expect(getByTestId('welcome-screen')).toBeTruthy();
-    expect(getByText('ITS A GOOD DAY TO YUNA')).toBeTruthy();
-    expect(getByText('tap to get started')).toBeTruthy();
   });
 
   it('hides welcome screen when content exists', () => {
@@ -211,7 +230,7 @@ describe('EditorContent', () => {
   });
 
   it('hides welcome screen and focuses input when welcome screen is pressed', () => {
-    const { getByTestId, queryByTestId } = render(
+    const { getByTestId } = render(
       <EditorContent content="" onChangeText={mockOnChangeText} onFocus={mockOnFocus} />
     );
 
@@ -219,13 +238,11 @@ describe('EditorContent', () => {
     expect(getByTestId('welcome-screen')).toBeTruthy();
 
     // Press welcome screen
-    const container = getByTestId('editor-content-container');
-    fireEvent.press(container);
+    const welcomePressable = getByTestId('welcome-screen-pressable');
+    fireEvent.press(welcomePressable);
 
-    // Welcome should hide and focus should be called
+    // Focus should be called
     expect(mockOnFocus).toHaveBeenCalledTimes(1);
-    // Note: In tests, the welcome screen might still render but be hidden via opacity
-    // The important part is that focus is triggered
   });
 
   it('transitions from welcome to editor when user types', () => {
@@ -237,8 +254,8 @@ describe('EditorContent', () => {
     expect(getByTestId('welcome-screen')).toBeTruthy();
 
     // Press welcome screen to focus input
-    const container = getByTestId('editor-content-container');
-    fireEvent.press(container);
+    const welcomePressable = getByTestId('welcome-screen-pressable');
+    fireEvent.press(welcomePressable);
 
     // User types
     const input = getByTestId('rich-text-editor');
