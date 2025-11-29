@@ -11,6 +11,8 @@ module.exports = function (api) {
           root: ['./'],
           alias: {
             '@': './',
+            '@features': './features',
+            '@shared': './shared',
           },
           extensions: [
             '.ios.js',

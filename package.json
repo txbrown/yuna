@@ -14,10 +14,12 @@
   "jest": {
     "preset": "jest-expo",
     "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|@shopify/react-native-skia)",
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)"
     ],
     "setupFilesAfterEnv": [
-      "@testing-library/jest-native/extend-expect"
+      "@testing-library/jest-native/extend-expect",
+      "<rootDir>/jest.setup.js"
     ],
     "moduleNameMapper": {
       "^expo-sqlite$": "<rootDir>/features/notes/__mocks__/expo-sqlite.ts",
@@ -27,7 +29,7 @@
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@react-navigation/native": "^7.1.8",
-    "@shopify/react-native-skia": "2.2.12",
+    "@shopify/react-native-skia": "^2.4.6",
     "@tanstack/react-query": "^5.90.11",
     "cactus-react-native": "^1.2.0",
     "expo": "~54.0.25",
@@ -43,11 +45,14 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
+    "react-native-enriched": "^0.1.6",
+    "react-native-markdown-display": "^7.0.2",
     "react-native-nitro-modules": "^0.31.10",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
     "react-native-web": "~0.21.0",
+    "react-native-webview": "^13.16.0",
     "react-native-worklets": "0.5.1",
     "zod": "^4.1.13"
   },

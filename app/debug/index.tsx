@@ -4,10 +4,10 @@ import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 import EditScreenInfo from '@/components/EditScreenInfo';
 import { Text as ThemedText, View as ThemedView } from '@/components/Themed';
 
-export default function TabOneScreen() {
+export default function DebugScreen() {
   return (
     <ThemedView style={styles.container}>
-      <ThemedText style={styles.title}>Tab One</ThemedText>
+      <ThemedText style={styles.title}>Debug Menu</ThemedText>
       <ThemedView
         style={styles.separator}
         lightColor='#eee'
@@ -26,7 +26,7 @@ export default function TabOneScreen() {
         </TouchableOpacity>
       </Link>
 
-      <EditScreenInfo path='app/(tabs)/index.tsx' />
+      <EditScreenInfo path='app/debug/index.tsx' />
     </ThemedView>
   );
 }
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     width: '80%',
   },
   debugButton: {
-    backgroundColor: '#2196f3',
+    backgroundColor: '#2C2C2C',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   personasButton: {
-    backgroundColor: '#9c27b0',
+    backgroundColor: '#2C2C2C',
   },
   debugButtonText: {
     color: '#fff',
@@ -66,3 +66,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+

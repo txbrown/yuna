@@ -18,7 +18,7 @@ import { NotesProvider } from '@/features/notes/providers/NotesProvider';
 
 export {
   // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
+  ErrorBoundary
 } from 'expo-router';
 
 export const unstable_settings = {
@@ -32,6 +32,9 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    'SpaceMono-Italic': require('../assets/fonts/SpaceMono-Italic.ttf'),
+    'SpaceMono-Bold': require('../assets/fonts/SpaceMono-Bold.ttf'),
+    'SpaceMono-BoldItalic': require('../assets/fonts/SpaceMono-BoldItalic.ttf'),
     ...FontAwesome.font,
   });
   const [isSplashReady, setSplashReady] = useState(false);
@@ -75,8 +78,16 @@ function RootLayoutNav() {
               headerRight: () => <SettingsButton />,
             }}
           />
+          <Stack.Screen
+            name='editor/index'
+            options={{
+              title: 'Editor',
+              headerShown: false,
+            }}
+          />
           <Stack.Screen name='settings' options={{ title: 'Settings' }} />
           <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
+          <Stack.Screen name='debug/index' options={{ title: 'Debug Menu' }} />
           <Stack.Screen name='debug/notes' options={{ title: 'Notes Debug' }} />
           <Stack.Screen
             name='debug/personas'

@@ -3,6 +3,7 @@ import { Link } from 'expo-router';
 import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
 import { Text as ThemedText, View as ThemedView } from '@/components/Themed';
+import Colors from '@/constants/Colors';
 
 export default function SettingsScreen() {
   return (
@@ -31,8 +32,8 @@ export default function SettingsScreen() {
             <TouchableOpacity
               style={[styles.debugButton, styles.personasButton]}
             >
-              <FontAwesome name='user' size={20} />
-              <Text style={styles.debugButtonText}>Personas Debug</Text>
+              <FontAwesome name='user' size={20} color={Colors.palette.darkCharcoal} />
+              <Text style={[styles.debugButtonText, styles.personasButtonText]}>Personas Debug</Text>
             </TouchableOpacity>
           </Link>
         </ThemedView>
@@ -71,7 +72,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   debugButton: {
-    backgroundColor: '#2196f3',
+    backgroundColor: '#2C2C2C',
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderRadius: 8,
@@ -82,10 +83,14 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   personasButton: {
-    backgroundColor: '#9c27b0',
+    backgroundColor: '#2C2C2C',
+  },
+  personasButtonText: {
+    color: Colors.palette.darkCharcoal,
   },
   debugButtonText: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#fff',
   },
 });
