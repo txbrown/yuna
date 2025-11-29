@@ -7,7 +7,7 @@ import { EditorHeader } from './EditorHeader';
 import { EditorToolbar } from './EditorToolbar';
 
 /**
- * @description Main Editor component that composes AnimatedBackground, EditorContent, and EditorToolbar
+ * @description Main Editor component that composes AmbientBackground, EditorContent, and EditorToolbar
  * @example
  * <Editor
  *   content={content}

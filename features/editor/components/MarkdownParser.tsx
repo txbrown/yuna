@@ -82,10 +82,11 @@ export function parseMarkdown(text: string): ParsedMarkdownNode[] {
 export function renderMarkdownNodes(
   nodes: ParsedMarkdownNode[],
   baseStyle?: TextProps['style']
-): React.ReactElement {
+): React.ReactElement | null {
+  if (!nodes || nodes.length === 0) return null;
   return (
     <Text style={baseStyle}>
-      {nodes.map((node, index) => {
+      {nodes.map((node: ParsedMarkdownNode, index: number) => {
         switch (node.type) {
           case 'bold':
             return (
