@@ -1,6 +1,21 @@
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { render, cleanup } from '@testing-library/react-native';
 import { View, Text } from 'react-native';
+
+// Mock requestAnimationFrame and cancelAnimationFrame to prevent animation loops
+let rafCallbacks: number[] = [];
+let rafId = 0;
+
+global.requestAnimationFrame = jest.fn((cb: FrameRequestCallback) => {
+  rafId++;
+  rafCallbacks.push(rafId);
+  // Don't actually call the callback to prevent infinite loops
+  return rafId;
+});
+
+global.cancelAnimationFrame = jest.fn((id: number) => {
+  rafCallbacks = rafCallbacks.filter((callbackId) => callbackId !== id);
+});
 
 // Mock useWindowDimensions before importing component
 jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
@@ -32,11 +47,38 @@ jest.mock('@shopify/react-native-skia', () => {
       const ViewComponent = View;
       return <ViewComponent testID="rect">{children}</ViewComponent>;
     },
+    Group: ({ children }: { children?: React.ReactNode }) => {
+      const ViewComponent = View;
+      return <ViewComponent testID="skia-group">{children}</ViewComponent>;
+    },
+    Blur: () => {
+      const ViewComponent = View;
+      return <ViewComponent testID="skia-blur" />;
+    },
+    Circle: () => {
+      const ViewComponent = View;
+      return <ViewComponent testID="skia-circle" />;
+    },
     vec: (x: number, y: number) => ({ x, y }),
   };
 });
 
 describe('AnimatedBackground', () => {
+  beforeEach(() => {
+    rafCallbacks = [];
+    rafId = 0;
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
+    // Cancel any pending animation frames
+    rafCallbacks.forEach((id) => {
+      global.cancelAnimationFrame(id);
+    });
+    rafCallbacks = [];
+  });
+
   it('renders with preset prop', () => {
     const { getByTestId } = render(
       <AnimatedBackground preset="sunny">
@@ -102,13 +144,20 @@ describe('AnimatedBackground', () => {
     const container = getByTestId('animated-background-container');
     expect(container).toBeTruthy();
     const style = container.props.style;
-    expect(style).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          position: 'absolute',
-        }),
-      ])
-    );
+    // Style can be an object or array, check for position property
+    if (Array.isArray(style)) {
+      expect(style).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            position: 'absolute',
+          }),
+        ])
+      );
+    } else {
+      expect(style).toMatchObject({
+        position: 'absolute',
+      });
+    }
   });
 
   it('renders Canvas with absoluteFill style', () => {

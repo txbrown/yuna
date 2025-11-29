@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
-import { Pressable, StyleSheet, Text, TextInput } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Markdown from 'react-native-markdown-display';
 import Animated, {
     interpolate,
     useAnimatedStyle,
@@ -8,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { EditorContentProps } from '../types';
+import { RichTextEditor, type RichTextEditorRef } from './RichTextEditor';
 
 const isEmpty = (text: string) => text.trim().length === 0;
 
@@ -28,8 +30,11 @@ export const EditorContent: React.FC<EditorContentProps> = ({
   onBlur,
   placeholder = 'Tap here to continue',
   onEditorModeChange,
+  onSelectionChange,
+  inputRef: externalInputRef,
+  onChangeState,
 }) => {
-  const inputRef = useRef<TextInput>(null);
+  const internalInputRef = useRef<RichTextEditorRef>(null);
   const insets = useSafeAreaInsets();
   const [hasFocused, setHasFocused] = React.useState(false);
   const showWelcome = isEmpty(content) && !hasFocused;
@@ -40,9 +45,10 @@ export const EditorContent: React.FC<EditorContentProps> = ({
 
   React.useEffect(() => {
     if (onEditorModeChange) {
-      onEditorModeChange(isInEditorMode);
+      // Pass hasFocused to indicate if user is actively editing (WebView is focused)
+      onEditorModeChange(hasFocused);
     }
-  }, [isInEditorMode, onEditorModeChange]);
+  }, [hasFocused, onEditorModeChange]);
   const welcomeOpacity = useSharedValue(showWelcome ? 1 : 0);
   const editorOpacity = useSharedValue(showWelcome ? 0 : 1);
 
@@ -58,7 +64,7 @@ export const EditorContent: React.FC<EditorContentProps> = ({
 
   const handleWelcomePress = () => {
     setHasFocused(true);
-    inputRef.current?.focus();
+    internalInputRef.current?.focus();
     if (onFocus) {
       onFocus();
     }
@@ -81,9 +87,25 @@ export const EditorContent: React.FC<EditorContentProps> = ({
     }
   };
 
-  const handleTextChange = (text: string) => {
-    onChangeText(text);
+  const handleSelectionChange = (start: number, end: number) => {
+    if (onSelectionChange) {
+      onSelectionChange(start, end);
+    }
   };
+
+  // Expose methods via ref for toolbar actions
+  React.useImperativeHandle(
+    externalInputRef,
+    () => ({
+      toggleBold: () => internalInputRef.current?.toggleBold(),
+      toggleItalic: () => internalInputRef.current?.toggleItalic(),
+      toggleUnderline: () => internalInputRef.current?.toggleUnderline(),
+      toggleStrikeThrough: () => internalInputRef.current?.toggleStrikeThrough(),
+      toggleUnorderedList: () => internalInputRef.current?.toggleUnorderedList(),
+      focus: () => internalInputRef.current?.focus(),
+    }),
+    []
+  );
 
   const welcomeStyle = useAnimatedStyle(() => {
     return {
@@ -119,20 +141,36 @@ export const EditorContent: React.FC<EditorContentProps> = ({
       )}
 
       <Animated.View style={[styles.editorWrapper, editorStyle]}>
-        <TextInput
-          ref={inputRef}
-          testID="editor-input"
-          style={[styles.input, { paddingTop: headerHeight + 20 }]}
-          value={content}
-          onChangeText={handleTextChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          placeholder=""
-          multiline
-          textAlignVertical="top"
-          autoFocus={false}
-          selectionColor="#000"
-        />
+        {/* Show formatted markdown when not focused */}
+        {!hasFocused && content ? (
+          <Pressable
+            style={[
+              styles.formattedView,
+              { paddingTop: headerHeight + 20 },
+            ]}
+            onPress={() => {
+              setHasFocused(true);
+              internalInputRef.current?.focus();
+            }}
+          >
+            <Markdown style={markdownStyles}>{content}</Markdown>
+          </Pressable>
+        ) : (
+          /* Use EnrichedTextInput when editing - shows formatted text while editing */
+          <View style={[styles.inputContainer, { paddingTop: headerHeight + 20 }]}>
+            <RichTextEditor
+              ref={internalInputRef}
+              content={content}
+              onChangeText={onChangeText}
+              onChangeState={onChangeState}
+              onChangeSelection={handleSelectionChange}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              style={styles.input}
+              placeholder=""
+            />
+          </View>
+        )}
       </Animated.View>
     </Pressable>
   );
@@ -175,13 +213,46 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  input: {
+  inputContainer: {
     flex: 1,
     width: '100%',
     padding: 20,
+  },
+  input: {
+    flex: 1,
+    width: '100%',
     fontSize: 16,
     fontFamily: 'Orbitron_400Regular',
     color: '#000',
   },
+  formattedView: {
+    flex: 1,
+    width: '100%',
+    padding: 20,
+  },
 });
+
+// Markdown styles to match input styling
+const markdownStyles = {
+  body: {
+    fontSize: 16,
+    fontFamily: 'Orbitron_400Regular',
+    color: '#000',
+    lineHeight: 24,
+  },
+  strong: {
+    fontWeight: 'bold' as const,
+    fontFamily: 'Orbitron_700Bold',
+  },
+  em: {
+    fontStyle: 'italic' as const,
+  },
+  list_item: {
+    marginBottom: 4,
+  },
+  paragraph: {
+    marginTop: 0,
+    marginBottom: 0,
+  },
+};
 

@@ -1,10 +1,10 @@
+import { AnimatedBackground } from '@shared/components/AnimatedBackground';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-// import { AnimatedBackground } from '@shared/components/AnimatedBackground';
-import { EditorContent } from './EditorContent';
-import { EditorToolbar } from './EditorToolbar';
-import { EditorHeader } from './EditorHeader';
 import type { EditorProps } from '../types';
+import { EditorContent } from './EditorContent';
+import { EditorHeader } from './EditorHeader';
+import { EditorToolbar } from './EditorToolbar';
 
 /**
  * @description Main Editor component that composes AnimatedBackground, EditorContent, and EditorToolbar
@@ -22,20 +22,35 @@ export const Editor: React.FC<EditorProps> = ({
   onChangeText,
   isBoldActive,
   isItalicActive,
+  isUnderlineActive,
+  isStrikeThroughActive,
   isListActive,
   onToggleBold,
   onToggleItalic,
+  onToggleUnderline,
+  onToggleStrikeThrough,
   onToggleList,
   backgroundPreset,
   headerTitle,
   onHeaderBackPress,
   onHeaderSharePress,
+  onSelectionChange,
+  inputRef,
+  onEditorModeChange,
+  onChangeState,
 }) => {
   const [isInEditorMode, setIsInEditorMode] = React.useState(false);
 
+  const handleEditorModeChange = (isEditing: boolean) => {
+    setIsInEditorMode(isEditing);
+    if (onEditorModeChange) {
+      onEditorModeChange(isEditing);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* <AnimatedBackground preset={backgroundPreset}> */}
+      <AnimatedBackground preset={backgroundPreset}>
         <View style={styles.editorContainer}>
           <EditorHeader
             title={headerTitle}
@@ -45,19 +60,27 @@ export const Editor: React.FC<EditorProps> = ({
           <EditorContent
             content={content}
             onChangeText={onChangeText}
-            onEditorModeChange={setIsInEditorMode}
+            onEditorModeChange={handleEditorModeChange}
+            onSelectionChange={onSelectionChange}
+            inputRef={inputRef}
+            onChangeState={onChangeState}
           />
           <EditorToolbar
             isBoldActive={isBoldActive}
             isItalicActive={isItalicActive}
+            isUnderlineActive={isUnderlineActive}
+            isStrikeThroughActive={isStrikeThroughActive}
             isListActive={isListActive}
             onToggleBold={onToggleBold}
             onToggleItalic={onToggleItalic}
+            onToggleUnderline={onToggleUnderline}
+            onToggleStrikeThrough={onToggleStrikeThrough}
             onToggleList={onToggleList}
             isVisible={isInEditorMode}
+            showItalic={false} // Hide italic since Orbitron doesn't support it
           />
         </View>
-      {/* </AnimatedBackground> */}
+      </AnimatedBackground>
     </View>
   );
 };

@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Editor } from './components/Editor';
+import type { RichTextEditorRef } from './components/RichTextEditor';
 
 /**
  * @feature Editor
@@ -10,20 +11,39 @@ import { Editor } from './components/Editor';
 export default function EditorScreen() {
   const router = useRouter();
   const [content, setContent] = useState('');
-  const [isBoldActive, setIsBoldActive] = useState(false);
-  const [isItalicActive, setIsItalicActive] = useState(false);
-  const [isListActive, setIsListActive] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [styleState, setStyleState] = useState<any>(null);
+  const inputRef = useRef<RichTextEditorRef | null>(null);
+
+  // Get active states from EnrichedTextInput's onChangeState
+  const isBoldActive = styleState?.isBold ?? false;
+  const isItalicActive = styleState?.isItalic ?? false;
+  const isUnderlineActive = styleState?.isUnderline ?? false;
+  const isStrikeThroughActive = styleState?.isStrikeThrough ?? false;
+  const isListActive = styleState?.isUnorderedList ?? false;
+
+  const handleSelectionChange = (start: number, end: number) => {
+    // Selection change is handled by EnrichedTextInput
+  };
 
   const handleToggleBold = () => {
-    setIsBoldActive((prev) => !prev);
+    inputRef.current?.toggleBold();
   };
 
   const handleToggleItalic = () => {
-    setIsItalicActive((prev) => !prev);
+    inputRef.current?.toggleItalic();
+  };
+
+  const handleToggleUnderline = () => {
+    inputRef.current?.toggleUnderline();
+  };
+
+  const handleToggleStrikeThrough = () => {
+    inputRef.current?.toggleStrikeThrough();
   };
 
   const handleToggleList = () => {
-    setIsListActive((prev) => !prev);
+    inputRef.current?.toggleUnorderedList();
   };
 
   const handleBackPress = () => {
@@ -40,12 +60,20 @@ export default function EditorScreen() {
       onChangeText={setContent}
       isBoldActive={isBoldActive}
       isItalicActive={isItalicActive}
+      isUnderlineActive={isUnderlineActive}
+      isStrikeThroughActive={isStrikeThroughActive}
       isListActive={isListActive}
       onToggleBold={handleToggleBold}
       onToggleItalic={handleToggleItalic}
+      onToggleUnderline={handleToggleUnderline}
+      onToggleStrikeThrough={handleToggleStrikeThrough}
       onToggleList={handleToggleList}
       backgroundPreset="sunny"
       onHeaderBackPress={handleBackPress}
+      onSelectionChange={handleSelectionChange}
+      inputRef={inputRef}
+      onEditorModeChange={setIsEditing}
+      onChangeState={setStyleState}
     />
   );
 }

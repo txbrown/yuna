@@ -37,15 +37,22 @@ describe('EditorToolbar', () => {
       <EditorToolbar
         isBoldActive={false}
         isItalicActive={false}
+        isUnderlineActive={false}
+        isStrikeThroughActive={false}
         isListActive={false}
         onToggleBold={mockOnToggleBold}
         onToggleItalic={mockOnToggleItalic}
+        onToggleUnderline={jest.fn()}
+        onToggleStrikeThrough={jest.fn()}
         onToggleList={mockOnToggleList}
+        showItalic={true}
       />
     );
 
     expect(getByText('B')).toBeTruthy();
     expect(getByText('I')).toBeTruthy();
+    expect(getByText('U')).toBeTruthy();
+    expect(getByText('S')).toBeTruthy();
     expect(getByText('•')).toBeTruthy();
   });
 
@@ -54,9 +61,13 @@ describe('EditorToolbar', () => {
       <EditorToolbar
         isBoldActive={false}
         isItalicActive={false}
+        isUnderlineActive={false}
+        isStrikeThroughActive={false}
         isListActive={false}
         onToggleBold={mockOnToggleBold}
         onToggleItalic={mockOnToggleItalic}
+        onToggleUnderline={jest.fn()}
+        onToggleStrikeThrough={jest.fn()}
         onToggleList={mockOnToggleList}
       />
     );
@@ -72,10 +83,15 @@ describe('EditorToolbar', () => {
       <EditorToolbar
         isBoldActive={false}
         isItalicActive={false}
+        isUnderlineActive={false}
+        isStrikeThroughActive={false}
         isListActive={false}
         onToggleBold={mockOnToggleBold}
         onToggleItalic={mockOnToggleItalic}
+        onToggleUnderline={jest.fn()}
+        onToggleStrikeThrough={jest.fn()}
         onToggleList={mockOnToggleList}
+        showItalic={true}
       />
     );
 
@@ -90,9 +106,13 @@ describe('EditorToolbar', () => {
       <EditorToolbar
         isBoldActive={false}
         isItalicActive={false}
+        isUnderlineActive={false}
+        isStrikeThroughActive={false}
         isListActive={false}
         onToggleBold={mockOnToggleBold}
         onToggleItalic={mockOnToggleItalic}
+        onToggleUnderline={jest.fn()}
+        onToggleStrikeThrough={jest.fn()}
         onToggleList={mockOnToggleList}
       />
     );
@@ -108,9 +128,13 @@ describe('EditorToolbar', () => {
       <EditorToolbar
         isBoldActive={true}
         isItalicActive={false}
+        isUnderlineActive={false}
+        isStrikeThroughActive={false}
         isListActive={false}
         onToggleBold={mockOnToggleBold}
         onToggleItalic={mockOnToggleItalic}
+        onToggleUnderline={jest.fn()}
+        onToggleStrikeThrough={jest.fn()}
         onToggleList={mockOnToggleList}
       />
     );
@@ -132,10 +156,15 @@ describe('EditorToolbar', () => {
       <EditorToolbar
         isBoldActive={false}
         isItalicActive={true}
+        isUnderlineActive={false}
+        isStrikeThroughActive={false}
         isListActive={false}
         onToggleBold={mockOnToggleBold}
         onToggleItalic={mockOnToggleItalic}
+        onToggleUnderline={jest.fn()}
+        onToggleStrikeThrough={jest.fn()}
         onToggleList={mockOnToggleList}
+        showItalic={true}
       />
     );
 
@@ -148,9 +177,13 @@ describe('EditorToolbar', () => {
       <EditorToolbar
         isBoldActive={false}
         isItalicActive={false}
+        isUnderlineActive={false}
+        isStrikeThroughActive={false}
         isListActive={true}
         onToggleBold={mockOnToggleBold}
         onToggleItalic={mockOnToggleItalic}
+        onToggleUnderline={jest.fn()}
+        onToggleStrikeThrough={jest.fn()}
         onToggleList={mockOnToggleList}
       />
     );
@@ -164,9 +197,13 @@ describe('EditorToolbar', () => {
       <EditorToolbar
         isBoldActive={false}
         isItalicActive={false}
+        isUnderlineActive={false}
+        isStrikeThroughActive={false}
         isListActive={false}
         onToggleBold={mockOnToggleBold}
         onToggleItalic={mockOnToggleItalic}
+        onToggleUnderline={jest.fn()}
+        onToggleStrikeThrough={jest.fn()}
         onToggleList={mockOnToggleList}
       />
     );
@@ -186,9 +223,13 @@ describe('EditorToolbar', () => {
       <EditorToolbar
         isBoldActive={false}
         isItalicActive={false}
+        isUnderlineActive={false}
+        isStrikeThroughActive={false}
         isListActive={false}
         onToggleBold={mockOnToggleBold}
         onToggleItalic={mockOnToggleItalic}
+        onToggleUnderline={jest.fn()}
+        onToggleStrikeThrough={jest.fn()}
         onToggleList={mockOnToggleList}
       />
     );
@@ -212,9 +253,13 @@ describe('EditorToolbar', () => {
       <EditorToolbar
         isBoldActive={false}
         isItalicActive={false}
+        isUnderlineActive={false}
+        isStrikeThroughActive={false}
         isListActive={false}
         onToggleBold={mockOnToggleBold}
         onToggleItalic={mockOnToggleItalic}
+        onToggleUnderline={jest.fn()}
+        onToggleStrikeThrough={jest.fn()}
         onToggleList={mockOnToggleList}
       />
     );
@@ -236,9 +281,13 @@ describe('EditorToolbar', () => {
       <EditorToolbar
         isBoldActive={false}
         isItalicActive={false}
+        isUnderlineActive={false}
+        isStrikeThroughActive={false}
         isListActive={false}
         onToggleBold={mockOnToggleBold}
         onToggleItalic={mockOnToggleItalic}
+        onToggleUnderline={jest.fn()}
+        onToggleStrikeThrough={jest.fn()}
         onToggleList={mockOnToggleList}
         isVisible={false}
       />
@@ -254,9 +303,13 @@ describe('EditorToolbar', () => {
       <EditorToolbar
         isBoldActive={false}
         isItalicActive={false}
+        isUnderlineActive={false}
+        isStrikeThroughActive={false}
         isListActive={false}
         onToggleBold={mockOnToggleBold}
         onToggleItalic={mockOnToggleItalic}
+        onToggleUnderline={jest.fn()}
+        onToggleStrikeThrough={jest.fn()}
         onToggleList={mockOnToggleList}
         isVisible={true}
       />

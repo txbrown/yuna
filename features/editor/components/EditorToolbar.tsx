@@ -1,9 +1,9 @@
 import React from 'react';
-import { StyleSheet, View, Text, Pressable, Keyboard } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, Text } from 'react-native';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
+    useAnimatedStyle,
+    useSharedValue,
+    withTiming,
 } from 'react-native-reanimated';
 import type { EditorToolbarProps } from '../types';
 
@@ -25,11 +25,16 @@ const KEYBOARD_OFFSET = 20; // Space above keyboard
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   isBoldActive,
   isItalicActive,
+  isUnderlineActive,
+  isStrikeThroughActive,
   isListActive,
   onToggleBold,
   onToggleItalic,
+  onToggleUnderline,
+  onToggleStrikeThrough,
   onToggleList,
   isVisible = true,
+  showItalic = false, // Hide italic by default (Orbitron doesn't support it)
 }) => {
   const bottomPosition = useSharedValue(DEFAULT_BOTTOM);
   const opacity = useSharedValue(isVisible ? 1 : 0);
@@ -79,13 +84,35 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </Text>
       </Pressable>
 
+      {showItalic && (
+        <Pressable
+          testID="toolbar-button-italic"
+          style={[styles.button, isItalicActive && styles.buttonActive]}
+          onPress={onToggleItalic}
+        >
+          <Text style={[styles.buttonText, isItalicActive && styles.buttonTextActive]}>
+            I
+          </Text>
+        </Pressable>
+      )}
+
       <Pressable
-        testID="toolbar-button-italic"
-        style={[styles.button, isItalicActive && styles.buttonActive]}
-        onPress={onToggleItalic}
+        testID="toolbar-button-underline"
+        style={[styles.button, isUnderlineActive && styles.buttonActive]}
+        onPress={onToggleUnderline}
       >
-        <Text style={[styles.buttonText, isItalicActive && styles.buttonTextActive]}>
-          I
+        <Text style={[styles.buttonText, isUnderlineActive && styles.buttonTextActive]}>
+          U
+        </Text>
+      </Pressable>
+
+      <Pressable
+        testID="toolbar-button-strikethrough"
+        style={[styles.button, isStrikeThroughActive && styles.buttonActive]}
+        onPress={onToggleStrikeThrough}
+      >
+        <Text style={[styles.buttonText, isStrikeThroughActive && styles.buttonTextActive]}>
+          S
         </Text>
       </Pressable>
 
@@ -119,13 +146,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+    flexWrap: 'wrap',
+    maxWidth: '95%',
   },
   button: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 8,
     backgroundColor: '#f5f5f5',
-    minWidth: 44,
+    minWidth: 40,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },

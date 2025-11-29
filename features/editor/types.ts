@@ -3,16 +3,21 @@
  * @description Type definitions for Editor UI components
  */
 
+import React from 'react';
+
 /**
  * Props for EditorContent component
  */
 export interface EditorContentProps {
-  content: string;
-  onChangeText: (text: string) => void;
+  content: string; // Markdown content
+  onChangeText: (text: string) => void; // Called with markdown
   onFocus?: () => void;
   onBlur?: () => void;
   placeholder?: string;
   onEditorModeChange?: (isInEditorMode: boolean) => void;
+  onSelectionChange?: (start: number, end: number) => void;
+  inputRef?: React.RefObject<any>; // Ref to EnrichedTextInputInstance
+  onChangeState?: (state: any) => void; // For style state updates
 }
 
 /**
@@ -21,11 +26,16 @@ export interface EditorContentProps {
 export interface EditorToolbarProps {
   isBoldActive: boolean;
   isItalicActive: boolean;
+  isUnderlineActive: boolean;
+  isStrikeThroughActive: boolean;
   isListActive: boolean;
   onToggleBold: () => void;
   onToggleItalic: () => void;
+  onToggleUnderline: () => void;
+  onToggleStrikeThrough: () => void;
   onToggleList: () => void;
   isVisible?: boolean;
+  showItalic?: boolean; // Hide italic if font doesn't support it
 }
 
 /**
@@ -41,17 +51,25 @@ export interface EditorHeaderProps {
  * Props for Editor component
  */
 export interface EditorProps {
-  content: string;
-  onChangeText: (text: string) => void;
+  content: string; // Markdown content
+  onChangeText: (text: string) => void; // Called with markdown
   isBoldActive: boolean;
   isItalicActive: boolean;
+  isUnderlineActive: boolean;
+  isStrikeThroughActive: boolean;
   isListActive: boolean;
   onToggleBold: () => void;
   onToggleItalic: () => void;
+  onToggleUnderline: () => void;
+  onToggleStrikeThrough: () => void;
   onToggleList: () => void;
   backgroundPreset?: 'sunny' | 'rainy';
   headerTitle?: string;
   onHeaderBackPress?: () => void;
   onHeaderSharePress?: () => void;
+  onSelectionChange?: (start: number, end: number) => void;
+  inputRef?: React.RefObject<any>; // Ref to EnrichedTextInputInstance
+  onEditorModeChange?: (isEditing: boolean) => void;
+  onChangeState?: (state: any) => void; // For style state updates
 }
 
