@@ -31,7 +31,7 @@ export default function SettingsScreen() {
             <TouchableOpacity
               style={[styles.debugButton, styles.personasButton]}
             >
-              <FontAwesome name='user' size={20} />
+              <FontAwesome name='user' size={20} color='#fff' />
               <Text style={styles.debugButtonText}>Personas Debug</Text>
             </TouchableOpacity>
           </Link>
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   debugButton: {
-    backgroundColor: '#2196f3',
+    backgroundColor: '#2C2C2C',
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderRadius: 8,
@@ -82,10 +82,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   personasButton: {
-    backgroundColor: '#9c27b0',
+    backgroundColor: '#2C2C2C',
   },
   debugButtonText: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#fff',
   },
 });

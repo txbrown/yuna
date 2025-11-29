@@ -1,3 +1,11 @@
+import {
+  Orbitron_400Regular,
+  Orbitron_500Medium,
+  Orbitron_600SemiBold,
+  Orbitron_700Bold,
+  Orbitron_800ExtraBold,
+  Orbitron_900Black,
+} from '@expo-google-fonts/orbitron';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import {
   DarkTheme,
@@ -18,7 +26,7 @@ import { NotesProvider } from '@/features/notes/providers/NotesProvider';
 
 export {
   // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
+  ErrorBoundary
 } from 'expo-router';
 
 export const unstable_settings = {
@@ -32,6 +40,12 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    Orbitron_400Regular,
+    Orbitron_500Medium,
+    Orbitron_600SemiBold,
+    Orbitron_700Bold,
+    Orbitron_800ExtraBold,
+    Orbitron_900Black,
     ...FontAwesome.font,
   });
   const [isSplashReady, setSplashReady] = useState(false);
@@ -75,8 +89,16 @@ function RootLayoutNav() {
               headerRight: () => <SettingsButton />,
             }}
           />
+          <Stack.Screen
+            name='editor/index'
+            options={{
+              title: 'Editor',
+              headerShown: false,
+            }}
+          />
           <Stack.Screen name='settings' options={{ title: 'Settings' }} />
           <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
+          <Stack.Screen name='debug/index' options={{ title: 'Debug Menu' }} />
           <Stack.Screen name='debug/notes' options={{ title: 'Notes Debug' }} />
           <Stack.Screen
             name='debug/personas'
