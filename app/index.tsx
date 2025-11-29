@@ -1,23 +1,28 @@
-import { StyleSheet } from 'react-native';
+import { Stack } from 'expo-router';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { Text, View } from '@/components/Themed';
+import { AmbientBackground } from '@/components/AmbientBackground';
 
 export default function HomeScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Yuna</Text>
-      <View
-        style={styles.separator}
-        lightColor='#eee'
-        darkColor='rgba(255,255,255,0.1)'
-      />
-      <Text style={styles.subtitle}>Your personal AI assistant</Text>
+      <Stack.Screen options={{ headerShown: true }} />
+      <AmbientBackground />
+
+      <View style={styles.contentContainer}>
+        <Text style={styles.title}>Welcome to Yuna</Text>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    // backgroundColor is handled by AmbientBackground, but fallback is good
+  },
+  contentContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -27,16 +32,14 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     marginBottom: 16,
+    fontFamily: 'SpaceMono',
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 18,
     color: '#666',
     marginTop: 16,
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
+    fontFamily: 'SpaceMono',
+    textAlign: 'center',
   },
 });
-

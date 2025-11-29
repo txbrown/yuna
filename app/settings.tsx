@@ -36,17 +36,6 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </Link>
         </ThemedView>
-
-        <ThemedView
-          style={styles.section}
-          lightColor='#f5f5f5'
-          darkColor='rgba(255,255,255,0.05)'
-        >
-          <ThemedText style={styles.sectionTitle}>About</ThemedText>
-          <ThemedText style={styles.sectionDescription}>
-            Yuna - Your personal AI assistant
-          </ThemedText>
-        </ThemedView>
       </ThemedView>
     </ScrollView>
   );

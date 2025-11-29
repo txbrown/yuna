@@ -1,10 +1,20 @@
 const tintColorLight = '#2f95dc';
 const tintColorDark = '#fff';
 
+export const Palette = {
+  cream: '#FDFCF4',
+  warmBeige: '#F5F0E6',
+  darkCharcoal: '#1A1A1A',
+  softGrey: '#E0E0E0',
+  accentOrange: '#FF8C69', // Approx from gradient
+  accentPeach: '#FFCBA4', // Approx from gradient
+  softYellow: '#F7EDC8',
+};
+
 export default {
   light: {
-    text: '#000',
-    background: '#fff',
+    text: Palette.darkCharcoal,
+    background: Palette.cream,
     tint: tintColorLight,
     tabIconDefault: '#ccc',
     tabIconSelected: tintColorLight,
@@ -16,4 +26,5 @@ export default {
     tabIconDefault: '#ccc',
     tabIconSelected: tintColorDark,
   },
+  palette: Palette,
 };

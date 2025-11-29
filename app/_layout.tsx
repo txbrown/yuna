@@ -7,10 +7,11 @@ import {
 import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
 import 'react-native-reanimated';
 
+import { AppSplashScreen } from '@/components/AppSplashScreen';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { NotesProvider } from '@/features/notes/providers/NotesProvider';
@@ -33,6 +34,7 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
+  const [isSplashReady, setSplashReady] = useState(false);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -41,12 +43,18 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
+      // Hide the native splash screen immediately
       SplashScreen.hideAsync();
+      // Keep our custom splash screen for a moment
+      const timer = setTimeout(() => {
+        setSplashReady(true);
+      }, 2500);
+      return () => clearTimeout(timer);
     }
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
+  if (!loaded || !isSplashReady) {
+    return <AppSplashScreen />;
   }
 
   return <RootLayoutNav />;
@@ -62,7 +70,8 @@ function RootLayoutNav() {
           <Stack.Screen
             name='index'
             options={{
-              title: 'Home',
+              title: '',
+              headerTransparent: true,
               headerRight: () => <SettingsButton />,
             }}
           />
@@ -86,16 +95,18 @@ function SettingsButton() {
   return (
     <Pressable
       onPress={() => router.push('/settings' as any)}
-      style={{ marginRight: 15 }}
+      style={({ pressed }) => ({
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 40,
+        height: 40,
+      })}
     >
-      {({ pressed }) => (
-        <FontAwesome
-          name='cog'
-          size={25}
-          color={Colors[colorScheme ?? 'light'].text}
-          style={{ opacity: pressed ? 0.5 : 1 }}
-        />
-      )}
+      <FontAwesome
+        name='cog'
+        size={24}
+        color={Colors[colorScheme ?? 'light'].text}
+      />
     </Pressable>
   );
 }
